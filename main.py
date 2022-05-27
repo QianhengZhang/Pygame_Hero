@@ -1,5 +1,5 @@
 import pygame
-from model import Hero
+from model import Hero, Tester
 
 def main():
     global avatar
@@ -11,7 +11,12 @@ def main():
 
     background = pygame.image.load('Run.png').convert()
     background = pygame. transform. scale(background, (window_size_x, window_size_y))
-    avatar = Hero((60, 350))
+    avatar_group = pygame.sprite.GroupSingle()
+    avatar = Hero((280, 500))
+    avatar_group.add(avatar)
+    test_group = pygame.sprite.Group()
+    tester = Tester((500, 500))
+    test_group.add(tester)
     clock = pygame.time.Clock()
 
     while True:
@@ -20,9 +25,18 @@ def main():
         controls = check_events()
         if controls['quit']:
             break
+        elif controls['reborn']:
+            avatar_group.add(Hero((280, 500)))
+        elif controls['click']:
+            test_group.add(Tester(controls['click']))
         surface.blit(background, (0,0))
-        avatar.update(controls)
-        avatar.draw(surface)
+        avatar_group.update(controls)
+        battle = pygame.sprite.spritecollide(avatar_group.sprite, test_group, dokill=False, collided=pygame.sprite.collide_mask)
+        for sprite in avatar_group:
+            sprite.update_collisiton(battle)
+        test_group.update()
+        avatar_group.draw(surface)
+        test_group.draw(surface)
         pygame.display.flip()
 
 
@@ -36,7 +50,9 @@ def check_events():
         'attack': False,
         'block': False,
         'up': False,
-        'down': False
+        'down': False,
+        'reborn': False,
+        'click': None
     }
 
     for event in pygame.event.get():
@@ -52,6 +68,10 @@ def check_events():
                 controls['jump'] = True
             if event.key == pygame.K_j:
                 controls['attack'] = True
+            if event.key == pygame.K_r:
+                controls['reborn'] = True
+        if event.type == pygame.MOUSEBUTTONDOWN:
+                controls['click'] = event.pos
         if event.type == pygame.KEYUP:
             pass
     key_pressed = pygame.key.get_pressed()
