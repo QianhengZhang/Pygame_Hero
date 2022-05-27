@@ -12,7 +12,7 @@ class Hero(pygame.sprite.Sprite):
         self.hp = 120
         self.attack = 20
         self.coolDown = 0.5
-        self.damageCoolDown = 1.5
+        self.damageCoolDown = 2.5
         self.status = 'idle'
         self.direction = 1
         self.velocity = 12
