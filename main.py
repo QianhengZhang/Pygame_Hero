@@ -31,9 +31,9 @@ def main():
             test_group.add(Tester(controls['click']))
         surface.blit(background, (0,0))
         avatar_group.update(controls)
-        battle = pygame.sprite.spritecollide(avatar_group.sprite, test_group, dokill=False, collided=pygame.sprite.collide_mask)
-        for sprite in avatar_group:
-            sprite.update_collisiton(battle)
+        if len(avatar_group) > 0 and len(test_group) > 0:
+            battle = pygame.sprite.spritecollide(avatar_group.sprite, test_group, dokill=False, collided=pygame.sprite.collide_mask)
+            avatar_group.sprite.update_collisiton(battle)
         test_group.update()
         avatar_group.draw(surface)
         test_group.draw(surface)

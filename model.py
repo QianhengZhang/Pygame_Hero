@@ -27,7 +27,7 @@ class Hero(pygame.sprite.Sprite):
             'attack' : [pygame.image.load(HERO_ASSET + f'Attack1/HeroKnight_Attack1_{i+1}.png') for i in range(0, 5)],
             'attack2' : [pygame.image.load(HERO_ASSET + f'Attack2/HeroKnight_Attack2_{i+1}.png') for i in range(0, 5)],
             'attack3' : [pygame.image.load(HERO_ASSET + f'Attack3/HeroKnight_Attack3_{i+1}.png') for i in range(0, 7)],
-
+            'hurt': [pygame.image.load(HERO_ASSET + f'Hurt/HeroKnight_Hurt_{i+1}.png') for i in range(0, 2)],
             'block' : [pygame.image.load(HERO_ASSET + f'BlockIdle/HeroKnight_Block Idle_{i+1}.png') for i in range(0, 7)]
         }
 
@@ -85,17 +85,13 @@ class Hero(pygame.sprite.Sprite):
                 print('attack')
                 for monster in battle:
                     monster.hp -= self.attack
-                    print(self.hp)
-                    print(monster.hp)
             else:
                 for monster in battle:
                     if new - self.lasthurt > self.damageCoolDown:
                         self.hp -= monster.attack
-                        self.rect.x -= 20 * self.direction
+                        time.sleep(0.25)
+                        self.rect.x -= 25
                         self.lasthurt = time.time()
-                        print(self.hp)
-                        print(monster.hp)
-                        time.sleep(0.1)
 
     def draw(self, surface):
         surface.blit(self.image, self.rect)
