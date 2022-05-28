@@ -26,7 +26,7 @@ def main():
         if controls['quit']:
             break
         elif controls['reborn']:
-            avatar_group.add(Hero((280, 500)))
+            avatar_group.add(Hero((300, 300)))
         elif controls['click']:
             test_group.add(Tester(controls['click']))
         surface.blit(background, (0,0))

@@ -184,5 +184,6 @@ class Warlock(pygame.sprite.Sprite):
         self.mask = pygame.mask.from_surface(self.image)
         if self.direction == -1:
             self.image = pygame.transform.flip(self.image, True, False)
+    
     def draw(self, surface):
         surface.blit(self.image, self.rect)
