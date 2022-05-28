@@ -9,13 +9,13 @@ def main():
     surface = pygame.display.set_mode([window_size_x,window_size_y])
     pygame.display.set_caption('Game')
 
-    background = pygame.image.load('Run.png').convert()
+    background = pygame.image.load('Boss.png').convert()
     background = pygame. transform. scale(background, (window_size_x, window_size_y))
     avatar_group = pygame.sprite.GroupSingle()
-    avatar = Hero((280, 500))
+    avatar = Hero((300, 300))
     avatar_group.add(avatar)
     test_group = pygame.sprite.Group()
-    tester = Tester((500, 500))
+    tester = Tester((650, 150))
     test_group.add(tester)
     clock = pygame.time.Clock()
 

@@ -106,7 +106,7 @@ class Tester(pygame.sprite.Sprite):
         self.hp = 80
         self.attack = 20
 
-        image_surf = pygame.image.load('assets\imgs\Sprites\HeroKnight_Idle.png').convert()
+        image_surf = pygame.image.load('tester.png').convert()
         self.image = pygame.Surface((44,55))
         image_surf = pygame.transform.flip(image_surf, True, False)
         self.image.blit(image_surf, (0,0))
