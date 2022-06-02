@@ -37,6 +37,7 @@ class Hero(pygame.sprite.Sprite):
         self.image.set_colorkey((0,0,0))
         self.mask = pygame.mask.from_surface(self.image)
         self.rect = self.image.get_rect(topleft=pos)
+        self.healthBar = HealthBar(self)
 
     def update(self, controls):
         if self.hp <= 0:
@@ -69,6 +70,8 @@ class Hero(pygame.sprite.Sprite):
         elif controls['block']:
             self.status = 'block'
             self.index = 0
+        elif new - self.lasthurt < 0.1:
+            self.status == 'hurt'
         else:
             self.status = 'idle'
         self.index = (self.index + 1) % len(self.images[self.status])
@@ -89,13 +92,12 @@ class Hero(pygame.sprite.Sprite):
                 for monster in battle:
                     if new - self.lasthurt > self.damageCoolDown:
                         self.hp -= monster.attack
-                        time.sleep(0.25)
                         self.rect.x -= 25
+                        time.sleep(0.2)
                         self.lasthurt = time.time()
 
     def draw(self, surface):
         surface.blit(self.image, self.rect)
-
 
 class Tester(pygame.sprite.Sprite):
 
@@ -184,6 +186,54 @@ class Warlock(pygame.sprite.Sprite):
         self.mask = pygame.mask.from_surface(self.image)
         if self.direction == -1:
             self.image = pygame.transform.flip(self.image, True, False)
-    
+
     def draw(self, surface):
         surface.blit(self.image, self.rect)
+
+class HealthBar():
+
+    def __init__(self, hero):
+        self.healthPoint = hero.hp
+        self.image = pygame.image.load('assets/imgs/heart.png').convert()
+        self.image = pygame. transform. scale(self.image, (20, 20))
+        self.image.set_colorkey((0,0,0))
+        self.pos = (50, 50)
+        self.rect = self.image.get_rect(topleft=self.pos)
+        self.fontobj = setup_fonts(18)
+        self.text_pos = (25, 45)
+        self.text_rect = self.image.get_rect(topleft=self.text_pos)
+
+    def draw(self, surface):
+        text_surface = self.fontobj.render('HP:', True, (255, 255, 255))
+        surface.blit(text_surface, self.text_rect)
+        number = self.healthPoint // 20
+        print(number)
+        for i in range(number):
+            surface.blit(self.image, self.rect)
+            self.rect.x += 20
+            print(i)
+        self.rect = self.image.get_rect(topleft=self.pos)
+
+def setup_fonts(font_size, bold=False, italic=False):
+    ''' Load a font, given a list of preferences
+
+        The preference list is a sorted list of strings (should probably be a parameter),
+        provided in a form from the FontBook list.
+        Any available font that starts with the same letters (lowercased, spaces removed)
+        as a font in the font_preferences list will be loaded.
+        If no font can be found from the preferences list, the pygame default will be returned.
+
+        returns -- A Font object
+    '''
+    font_preferences = ['Helvetica Neue', 'Iosevka Regular', 'Comic Sans', 'Courier New']
+    available = pygame.font.get_fonts()
+    prefs = [x.lower().replace(' ', '') for x in font_preferences]
+    for pref in prefs:
+        a = [x
+             for x in available
+             if x.startswith(pref)
+            ]
+        if a:
+            fonts = ','.join(a) #SysFont expects a string with font names in it
+            return pygame.font.SysFont(fonts, font_size, bold, italic)
+    return pygame.font.SysFont(None, font_size, bold, italic)

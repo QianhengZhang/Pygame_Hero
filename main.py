@@ -1,21 +1,21 @@
 import pygame
-from model import Hero, Tester
+from model import HealthBar, Hero, Tester
 
 def main():
     global avatar
     pygame.init()
-    window_size_x = 1050
-    window_size_y = 700
+    window_size_x = 800
+    window_size_y = 600
     surface = pygame.display.set_mode([window_size_x,window_size_y])
     pygame.display.set_caption('Game')
 
-    background = pygame.image.load('Boss.png').convert()
+    background = pygame.image.load('assets/imgs/Battleground2.png').convert()
     background = pygame. transform. scale(background, (window_size_x, window_size_y))
     avatar_group = pygame.sprite.GroupSingle()
-    avatar = Hero((300, 300))
+    avatar = Hero((100, 400))
     avatar_group.add(avatar)
     test_group = pygame.sprite.Group()
-    tester = Tester((650, 150))
+    tester = Tester((550, 450))
     test_group.add(tester)
     clock = pygame.time.Clock()
 
@@ -35,6 +35,8 @@ def main():
             battle = pygame.sprite.spritecollide(avatar_group.sprite, test_group, dokill=False, collided=pygame.sprite.collide_mask)
             avatar_group.sprite.update_collisiton(battle)
         test_group.update()
+        healthBar = HealthBar(avatar_group.sprite)
+        healthBar.draw(surface)
         avatar_group.draw(surface)
         test_group.draw(surface)
         pygame.display.flip()
