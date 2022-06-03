@@ -1,5 +1,5 @@
 import pygame
-from model import HealthBar, Hero, Tester
+from model import HealthBar, Hero, Tester, TextBox
 
 def main():
     global avatar
@@ -17,28 +17,30 @@ def main():
     test_group = pygame.sprite.Group()
     tester = Tester((550, 450))
     test_group.add(tester)
+    pop = TextBox(surface)
     clock = pygame.time.Clock()
 
     while True:
-        clock.tick(21)
+        clock.tick(18)
 
         controls = check_events()
         if controls['quit']:
             break
         elif controls['reborn']:
-            avatar_group.add(Hero((300, 300)))
+            avatar_group.add(Hero((100, 400)))
         elif controls['click']:
             test_group.add(Tester(controls['click']))
         surface.blit(background, (0,0))
         avatar_group.update(controls)
         if len(avatar_group) > 0 and len(test_group) > 0:
             battle = pygame.sprite.spritecollide(avatar_group.sprite, test_group, dokill=False, collided=pygame.sprite.collide_mask)
-            avatar_group.sprite.update_collisiton(battle)
+            avatar_group.sprite.update_collisiton(battle,clock)
         test_group.update()
         healthBar = HealthBar(avatar_group.sprite)
         healthBar.draw(surface)
         avatar_group.draw(surface)
         test_group.draw(surface)
+        pop.update(controls)
         pygame.display.flip()
 
 
@@ -54,7 +56,9 @@ def check_events():
         'up': False,
         'down': False,
         'reborn': False,
-        'click': None
+        'click': None,
+        'pop': False,
+        'close': False
     }
 
     for event in pygame.event.get():
@@ -72,6 +76,10 @@ def check_events():
                 controls['attack'] = True
             if event.key == pygame.K_r:
                 controls['reborn'] = True
+            if event.key == pygame.K_p:
+                controls['pop'] = True
+            if event.key == pygame.K_0:
+                controls['close'] = True
         if event.type == pygame.MOUSEBUTTONDOWN:
                 controls['click'] = event.pos
         if event.type == pygame.KEYUP:
