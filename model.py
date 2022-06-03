@@ -80,12 +80,11 @@ class Hero(pygame.sprite.Sprite):
         if self.direction == -1:
             self.image = pygame.transform.flip(self.image, True, False)
 
-    def update_collisiton(self, battle):
+    def update_collisiton(self, battle, clock):
         status = ['attack', 'attack1', 'attack2']
         new = time.time()
         if len(battle) > 0:
             if self.status in status:
-                print('attack')
                 for monster in battle:
                     monster.hp -= self.attack
             else:
@@ -93,7 +92,7 @@ class Hero(pygame.sprite.Sprite):
                     if new - self.lasthurt > self.damageCoolDown:
                         self.hp -= monster.attack
                         self.rect.x -= 25
-                        time.sleep(0.2)
+                        clock.tick(1)
                         self.lasthurt = time.time()
 
     def draw(self, surface):
@@ -207,11 +206,9 @@ class HealthBar():
         text_surface = self.fontobj.render('HP:', True, (255, 255, 255))
         surface.blit(text_surface, self.text_rect)
         number = self.healthPoint // 20
-        print(number)
         for i in range(number):
             surface.blit(self.image, self.rect)
             self.rect.x += 20
-            print(i)
         self.rect = self.image.get_rect(topleft=self.pos)
 
 def setup_fonts(font_size, bold=False, italic=False):
@@ -237,3 +234,32 @@ def setup_fonts(font_size, bold=False, italic=False):
             fonts = ','.join(a) #SysFont expects a string with font names in it
             return pygame.font.SysFont(fonts, font_size, bold, italic)
     return pygame.font.SysFont(None, font_size, bold, italic)
+
+class TextBox():
+
+    def __init__(self, surface):
+        self.status = 'close'
+        self.surface = surface
+        self.fontobj = setup_fonts(18)
+        self.rect = pygame.Rect((0,0),(240, 120))
+        self.rect.center = (400, 300)
+        self.image_surf = pygame.image.load('assets\imgs\pop_up.jpg').convert()
+        self.image_surf = pygame. transform. scale(self.image_surf, (240, 120))
+
+
+
+    def pop_up(self, text):
+        text_surface = self.fontobj.render(text, True, (255, 255, 255))
+        text_rect = text_surface.get_rect(center = self.rect.center)
+        self.surface.blit(self.image_surf, self.rect)
+        self.surface.blit(text_surface, text_rect)
+        self.status = 'pop_up'
+
+
+    def update(self, control):
+        if control['pop'] == True and self.status != 'pop_up':
+            self.status = 'pop_up'
+        elif control['pop'] == True and self.status == 'pop_up':
+            self.status = 'close'
+        if self.status == 'pop_up':
+            self.pop_up('This is a pop up window')
