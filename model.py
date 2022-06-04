@@ -243,7 +243,7 @@ class TextBox():
         self.fontobj = setup_fonts(18)
         self.rect = pygame.Rect((0,0),(240, 120))
         self.rect.center = (400, 300)
-        self.image_surf = pygame.image.load('assets\imgs\pop_up.jpg').convert()
+        self.image_surf = pygame.image.load('pop_up.jpg').convert()
         self.image_surf = pygame. transform. scale(self.image_surf, (240, 120))
 
 
