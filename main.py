@@ -1,11 +1,12 @@
 import pygame
+import start_menu
 from model import HealthBar, Hero, Tester, TextBox
 
 def main():
     global avatar
     pygame.init()
-    window_size_x = 800
-    window_size_y = 600
+    window_size_x = 1070
+    window_size_y = 720
     surface = pygame.display.set_mode([window_size_x,window_size_y])
     pygame.display.set_caption('Game')
 
@@ -19,6 +20,10 @@ def main():
     test_group.add(tester)
     pop = TextBox(surface)
     clock = pygame.time.Clock()
+    
+    start_page = True
+    while start_page:
+        start_page = start_menu.start_menu()
 
     while True:
         clock.tick(18)
