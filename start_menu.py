@@ -2,7 +2,7 @@ import sys
 import pygame
 from datetime import date
 import shelve # part of the standard library
-
+from pygame import mixer
 
 pygame.init()
 clock = pygame.time.Clock()
@@ -21,8 +21,12 @@ blackish = (10, 10, 10)
 white = (255, 255, 255)
 black = (0, 0, 0)
 
-background = pygame.image.load("Boss.png")
+background = pygame.image.load("menu_background.png")
+background = pygame.transform.scale(background, (1070, 720))
 
+# Background Sound
+mixer.music.load("background.wav")
+mixer.music.play(-1)
 
 # Function to create a button
 def create_button(x, y, width, height, hovercolor, defaultcolor):
