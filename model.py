@@ -68,7 +68,6 @@ class Hero(pygame.sprite.Sprite):
                 self.movement_wrapper(controls['up'], controls['down'], controls['left'], controls['right'])
             elif controls['block']:
                 self.status = 'block'
-                self.index = 0
             else:
                 self.status = 'idle'
         self.index = (self.index + 1) % len(self.images[self.status])
