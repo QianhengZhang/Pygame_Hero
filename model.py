@@ -1,3 +1,4 @@
+from turtle import update
 import pygame
 import time
 
@@ -8,8 +9,8 @@ class Hero(pygame.sprite.Sprite):
 
     def __init__(self, pos):
         pygame.sprite.Sprite.__init__(self)
-        self.maxHp = 120
-        self.hp = 120
+        self.maxHp = 60
+        self.hp = 60
         self.attack = 20
         self.coolDown = 0.5
         self.damageCoolDown = 2.5
@@ -27,8 +28,10 @@ class Hero(pygame.sprite.Sprite):
             'attack' : [pygame.image.load(HERO_ASSET + f'Attack1/HeroKnight_Attack1_{i+1}.png') for i in range(0, 5)],
             'attack2' : [pygame.image.load(HERO_ASSET + f'Attack2/HeroKnight_Attack2_{i+1}.png') for i in range(0, 5)],
             'attack3' : [pygame.image.load(HERO_ASSET + f'Attack3/HeroKnight_Attack3_{i+1}.png') for i in range(0, 7)],
-            'hurt': [pygame.image.load(HERO_ASSET + f'Hurt/HeroKnight_Hurt_{i+1}.png') for i in range(0, 2)],
-            'block' : [pygame.image.load(HERO_ASSET + f'BlockIdle/HeroKnight_Block Idle_{i+1}.png') for i in range(0, 7)]
+            'hurt': [pygame.image.load(HERO_ASSET + f'Hurt/HeroKnight_Hurt_{i+1}.png') for i in range(0, 11)],
+            'block' : [pygame.image.load(HERO_ASSET + f'BlockIdle/HeroKnight_Block Idle_{i+1}.png') for i in range(0, 7)],
+            'death' : [pygame.image.load(HERO_ASSET + f'Death/HeroKnight_Death_{i+1}.png') for i in range(0, 9)]
+
         }
 
         image_surf = pygame.image.load(HERO_ASSET + 'idle/HeroKnight_Idle_0.png').convert()
@@ -40,47 +43,57 @@ class Hero(pygame.sprite.Sprite):
         self.healthBar = HealthBar(self)
 
     def update(self, controls):
+        print(pygame.mixer.get_num_channels())
         if self.hp <= 0:
-            self.kill()
-
+            self.status = 'death'
+            if self.index == len(self.images[self.status]) - 1:
+                self.kill()
+                pygame.mixer.music.load('assets/sounds/mixkit-player-losing-or-failing-2042.wav')
+                pygame.mixer.music.play()
         new = time.time()
-        if controls['attack'] and (new-self.last > self.coolDown):
-            if controls['block']:
-                self.status = 'attack2'
-            elif self.status == 'run':
-                self.status = 'attack3'
+        if self.index == len(self.images[self.status]) - 1 or self.status in ['idle', 'run', 'block'] and self.status != 'death':
+            if controls['attack'] and (new-self.last > self.coolDown):
+                pygame.mixer.music.load('assets/sounds/mixkit-sword-blade-attack-in-medieval-battle-2762.wav')
+                pygame.mixer.music.play()
+                if controls['block']:
+                    self.status = 'attack2'
+                elif self.status == 'run':
+                    self.status = 'attack3'
+                else:
+                    self.status = 'attack'
+                self.index = 0
+                self.last = time.time()
+            elif controls['up'] or controls['down'] or controls['left'] or controls['right']:
+                self.status = 'run'
+                self.movement_wrapper(controls['up'], controls['down'], controls['left'], controls['right'])
+            elif controls['block']:
+                self.status = 'block'
+                self.index = 0
             else:
-                self.status = 'attack'
-            self.index = 0
-            self.last = time.time()
-        elif controls['up']:
-            self.status = 'run'
-            self.rect.y -= self.velocity
-        elif controls['down']:
-            self.status = 'run'
-            self.rect.y += self.velocity
-        elif controls['left']:
-            self.direction = -1
-            self.status = 'run'
-            self.rect.x -= self.velocity
-        elif controls['right']:
-            self.direction = 1
-            self.status = 'run'
-            self.rect.x += self.velocity
-        elif controls['block']:
-            self.status = 'block'
-            self.index = 0
-        elif new - self.lasthurt < 0.1:
-            self.status == 'hurt'
-        else:
-            self.status = 'idle'
+                self.status = 'idle'
         self.index = (self.index + 1) % len(self.images[self.status])
         self.image = self.images[self.status][self.index]
         self.mask = pygame.mask.from_surface(self.image)
         if self.direction == -1:
             self.image = pygame.transform.flip(self.image, True, False)
 
-    def update_collisiton(self, battle, clock):
+    def movement_wrapper(self, up, down, left, right):
+        x = 0
+        y = 0
+        if up:
+            y = -1
+        elif down:
+            y = 1
+        if left:
+            x = -1
+            self.direction = -1
+        elif right:
+            x = 1
+            self.direction = 1
+        self.rect.x += x * self.velocity
+        self.rect.y += y * self.velocity
+
+    def update_collisiton(self, battle):
         status = ['attack', 'attack1', 'attack2']
         new = time.time()
         if len(battle) > 0:
@@ -91,9 +104,25 @@ class Hero(pygame.sprite.Sprite):
                 for monster in battle:
                     if new - self.lasthurt > self.damageCoolDown:
                         self.hp -= monster.attack
-                        self.rect.x -= 25
-                        clock.tick(1)
+                        if self.hp > 0:
+                            pygame.mixer.music.load('assets/sounds/mixkit-human-fighter-pain-scream-2768.wav')
+                            pygame.mixer.music.play()
                         self.lasthurt = time.time()
+                        self.index = 0
+                        self.update_hurt()
+
+    def update_hurt(self):
+        print('hurt')
+        self.status = 'hurt'
+        self.rect.x -= self.direction * 15
+        self.image = self.images[self.status][self.index]
+        self.index = (self.index + 1) % len(self.images[self.status])
+        print(self.index)
+        if self.index == len(self.images[self.status]) - 1:
+            self.status = ['idle']
+            print('end')
+        if self.direction == -1:
+            self.image = pygame.transform.flip(self.image, True, False)
 
     def draw(self, surface):
         surface.blit(self.image, self.rect)
@@ -196,7 +225,7 @@ class HealthBar():
         self.image = pygame.image.load('assets/imgs/heart.png').convert()
         self.image = pygame. transform. scale(self.image, (20, 20))
         self.image.set_colorkey((0,0,0))
-        self.pos = (50, 50)
+        self.pos = (55, 50)
         self.rect = self.image.get_rect(topleft=self.pos)
         self.fontobj = setup_fonts(18)
         self.text_pos = (25, 45)
@@ -242,7 +271,7 @@ class TextBox():
         self.surface = surface
         self.fontobj = setup_fonts(18)
         self.rect = pygame.Rect((0,0),(240, 120))
-        self.rect.center = (400, 300)
+        self.rect.center = (540, 360)
         self.image_surf = pygame.image.load('pop_up.jpg').convert()
         self.image_surf = pygame. transform. scale(self.image_surf, (240, 120))
 
@@ -263,3 +292,4 @@ class TextBox():
             self.status = 'close'
         if self.status == 'pop_up':
             self.pop_up('This is a pop up window')
+

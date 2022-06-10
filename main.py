@@ -5,7 +5,7 @@ from model import HealthBar, Hero, Tester, TextBox
 def main():
     global avatar
     pygame.init()
-    window_size_x = 1070
+    window_size_x = 1080
     window_size_y = 720
     surface = pygame.display.set_mode([window_size_x,window_size_y])
     pygame.display.set_caption('Game')
@@ -20,11 +20,11 @@ def main():
     test_group.add(tester)
     pop = TextBox(surface)
     clock = pygame.time.Clock()
-    
+
     start_page = True
     while start_page:
         start_page = start_menu.start_menu()
-
+    pygame.mixer.music.fadeout(5000)
     while True:
         clock.tick(18)
 
@@ -39,10 +39,11 @@ def main():
         avatar_group.update(controls)
         if len(avatar_group) > 0 and len(test_group) > 0:
             battle = pygame.sprite.spritecollide(avatar_group.sprite, test_group, dokill=False, collided=pygame.sprite.collide_mask)
-            avatar_group.sprite.update_collisiton(battle,clock)
+            avatar_group.sprite.update_collisiton(battle)
+        if len(avatar_group) > 0:
+            healthBar = HealthBar(avatar_group.sprite)
+            healthBar.draw(surface)
         test_group.update()
-        healthBar = HealthBar(avatar_group.sprite)
-        healthBar.draw(surface)
         avatar_group.draw(surface)
         test_group.draw(surface)
         pop.update(controls)

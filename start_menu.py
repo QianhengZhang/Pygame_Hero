@@ -51,12 +51,12 @@ def start_menu():
         screen.fill((0, 0, 0))
         screen.blit(todayText, (5, 10))
         screen.blit(startText, ((screen_width - startText.get_width()) / 2, 0))
-        
+
         # start button (left, top, width, height)
         start_button = create_button(screen_width - 130, 7, 125, 26, lightgrey, slategrey)
 
         if start_button:
-           return False 
+           return False
 
         # Start button text
         startbuttontext = smallfont.render("Start the Game!", True, blackish)
