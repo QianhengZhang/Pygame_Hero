@@ -9,8 +9,8 @@ class Hero(pygame.sprite.Sprite):
 
     def __init__(self, pos):
         pygame.sprite.Sprite.__init__(self)
-        self.maxHp = 60
-        self.hp = 60
+        self.maxHp = 80
+        self.hp = 80
         self.attack = 20
         self.coolDown = 0.5
         self.damageCoolDown = 2.5
@@ -222,12 +222,12 @@ class HealthBar():
     def __init__(self, hero):
         self.healthPoint = hero.hp
         self.image = pygame.image.load('assets/imgs/heart.png').convert()
-        self.image = pygame. transform. scale(self.image, (20, 20))
+        self.image = pygame. transform. scale(self.image, (40, 40))
         self.image.set_colorkey((0,0,0))
         self.pos = (55, 50)
         self.rect = self.image.get_rect(topleft=self.pos)
-        self.fontobj = setup_fonts(18)
-        self.text_pos = (25, 45)
+        self.fontobj = setup_fonts(24)
+        self.text_pos = (20, 50)
         self.text_rect = self.image.get_rect(topleft=self.text_pos)
 
     def draw(self, surface):
@@ -236,7 +236,7 @@ class HealthBar():
         number = self.healthPoint // 20
         for i in range(number):
             surface.blit(self.image, self.rect)
-            self.rect.x += 20
+            self.rect.x += 40
         self.rect = self.image.get_rect(topleft=self.pos)
 
 def setup_fonts(font_size, bold=False, italic=False):
@@ -269,10 +269,10 @@ class TextBox():
         self.status = 'close'
         self.surface = surface
         self.fontobj = setup_fonts(18)
-        self.rect = pygame.Rect((0,0),(240, 120))
+        self.rect = pygame.Rect((0,0),(400, 200))
         self.rect.center = (540, 360)
         self.image_surf = pygame.image.load('pop_up.jpg').convert()
-        self.image_surf = pygame. transform. scale(self.image_surf, (240, 120))
+        self.image_surf = pygame. transform. scale(self.image_surf, (400, 200))
 
 
 
@@ -292,3 +292,7 @@ class TextBox():
         if self.status == 'pop_up':
             self.pop_up('This is a pop up window')
 
+class GameManager():
+
+    def __init__(self) -> None:
+        pass
