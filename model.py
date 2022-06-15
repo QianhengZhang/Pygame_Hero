@@ -4,6 +4,7 @@ import time
 
 HERO_ASSET = 'assets/imgs/Sprites/HeroKnight/'
 Warlock_ASSET = 'assets/imgs/Sprites/Warlock/'
+Skeleton_ASSET = 'assets/imgs/Sprites/Skeleton/'
 
 class Hero(pygame.sprite.Sprite):
 
@@ -148,6 +149,93 @@ class Tester(pygame.sprite.Sprite):
             self.kill()
 
     def draw(self, surface):
+        surface.blit(self.image, self.rect)
+
+class Skeleton_blue(pygame.sprite.Sprite):
+
+    def __init__(self, pos):
+        pygame.sprite.Sprite.__init__(self)
+        self.hp = 50
+        self.state = 'born'
+        self.index = 0
+        self.image = pygame.Surface((64,64))
+        self.image_surf = pygame.image.load(Skeleton_ASSET + f'SkeletonMage_Blue.png').convert()
+        self.image.blit(self.image_surf,(0,0),(180,0,64,64))
+        self.image.set_colorkey((0,0,0))
+        self.rect = self.image.get_rect(topleft=pos)
+        self.image_rects = {
+            'idle' : [pygame.Rect(0,64,64,64),pygame.Rect(64,64,64,64),pygame.Rect(128,64,64,64),pygame.Rect(192,64,64,64)],
+            'run' : [pygame.Rect(0,320,64,64),pygame.Rect(64,320,64,64),pygame.Rect(128,320,64,64),
+                        pygame.Rect(192,320,64,64),pygame.Rect(256,320,64,64),pygame.Rect(320,320,64,64)],
+            'attack' : [pygame.Rect(0,576,64,64),pygame.Rect(64,576,64,64),pygame.Rect(128,576,64,64),
+                        pygame.Rect(192,576,64,64),pygame.Rect(256,576,64,64),pygame.Rect(320,576,64,64),
+                        pygame.Rect(384,576,64,64),pygame.Rect(448,576,64,64)],
+            'born' : [pygame.Rect(0,1088,64,64),pygame.Rect(64,1088,64,64),pygame.Rect(128,1088,64,64),
+                        pygame.Rect(192,1088,64,64),pygame.Rect(256,1088,64,64),pygame.Rect(320,1088,64,64),
+                        pygame.Rect(384,1088,64,64),pygame.Rect(448,1088,64,64),pygame.Rect(512,1088,64,64)],
+            'hurt' : [pygame.Rect(0,1280,64,64),pygame.Rect(64,1280,64,64),pygame.Rect(128,1280,64,64),
+                        pygame.Rect(192,1280,64,64),pygame.Rect(256,1280,64,64),pygame.Rect(320,1280,64,64)],
+            'death' : [pygame.Rect(0,1472,64,64),pygame.Rect(64,1472,64,64),pygame.Rect(128,1472,64,64),
+                        pygame.Rect(192,1472,64,64),pygame.Rect(256,1472,64,64),pygame.Rect(320,1472,64,64),
+                        pygame.Rect(384,1472,64,64)]
+        }
+
+    def update(self):
+        if self.state == 'born' and self.index == 8:
+            self.state = 'idle'
+            self.index = 0
+        if self.hp < 0:
+            self.state == 'death'
+        if self.state == 'death' and self.index == 6:
+            self.kill()
+        self.index = (self.index + 1)%len(self.image_rects[self.state])
+        self.image.blit(self.image_surf,(0,0),self.image_rects[self.state][self.index])
+    def draw(self, surface):
+
+        surface.blit(self.image, self.rect)
+
+class Skeleton_red(pygame.sprite.Sprite):
+
+    def __init__(self, pos):
+        pygame.sprite.Sprite.__init__(self)
+        self.hp = 80
+        self.state = 'born'
+        self.index = 0
+        self.image = pygame.Surface((64,64))
+        self.image_surf = pygame.image.load(Skeleton_ASSET + f'SkeletonMage_Red.png').convert()
+        self.image.blit(self.image_surf,(0,0),(180,0,64,64))
+        self.image.set_colorkey((0,0,0))
+        self.rect = self.image.get_rect(topleft=pos)
+        self.image_rects = {
+            'idle' : [pygame.Rect(0,64,64,64),pygame.Rect(64,64,64,64),pygame.Rect(128,64,64,64),pygame.Rect(192,64,64,64)],
+            'run' : [pygame.Rect(0,320,64,64),pygame.Rect(64,320,64,64),pygame.Rect(128,320,64,64),
+                        pygame.Rect(192,320,64,64),pygame.Rect(256,320,64,64),pygame.Rect(320,320,64,64)],
+            'attack' : [pygame.Rect(0,832,64,64),pygame.Rect(64,832,64,64),pygame.Rect(128,832,64,64),
+                        pygame.Rect(192,832,64,64),pygame.Rect(256,832,64,64),pygame.Rect(320,832,64,64),
+                        pygame.Rect(384,832,64,64),pygame.Rect(448,832,64,64)],
+            'born' : [pygame.Rect(0,1088,64,64),pygame.Rect(64,1088,64,64),pygame.Rect(128,1088,64,64),
+                        pygame.Rect(192,1088,64,64),pygame.Rect(256,1088,64,64),pygame.Rect(320,1088,64,64),
+                        pygame.Rect(384,1088,64,64),pygame.Rect(448,1088,64,64),pygame.Rect(512,1088,64,64)],
+            'hurt' : [pygame.Rect(0,1280,64,64),pygame.Rect(64,1280,64,64),pygame.Rect(128,1280,64,64),
+                        pygame.Rect(192,1280,64,64),pygame.Rect(256,1280,64,64),pygame.Rect(320,1280,64,64)],
+            'death' : [pygame.Rect(0,1472,64,64),pygame.Rect(64,1472,64,64),pygame.Rect(128,1472,64,64),
+                        pygame.Rect(192,1472,64,64),pygame.Rect(256,1472,64,64),pygame.Rect(320,1472,64,64),
+                        pygame.Rect(384,1472,64,64)]
+        }
+
+
+    def update(self):
+        if self.state == 'born' and self.index == 8:
+            self.state = 'idle'
+            self.index = 0
+        if self.hp < 0:
+            self.state == 'death'
+        if self.state == 'death' and self.index == 6:
+            self.kill()
+        self.index = (self.index + 1)%len(self.image_rects[self.state])
+        self.image.blit(self.image_surf,(0,0),self.image_rects[self.state][self.index])
+    def draw(self, surface):
+
         surface.blit(self.image, self.rect)
 class Warlock(pygame.sprite.Sprite):
 
