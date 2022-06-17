@@ -25,7 +25,7 @@ background = pygame.image.load("menu_background.png")
 background = pygame.transform.scale(background, (1080, 720))
 
 # Background Sound
-mixer.music.load("assets\sounds\epic_battle_music_1-6275.wav")
+mixer.music.load("background.wav")
 mixer.music.play(-1)
 
 # Function to create a button

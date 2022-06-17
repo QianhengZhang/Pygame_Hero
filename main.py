@@ -25,7 +25,7 @@ def main():
     while start_page:
         start_page = start_menu.start_menu()
     pygame.mixer.music.fadeout(5000)
-    pygame.mixer.music.load("assets\sounds\epic_battle_music_1-6275.wav")
+    pygame.mixer.music.load("background.wav")
     pygame.mixer.music.play(-1)
     while True:
         clock.tick(18)
