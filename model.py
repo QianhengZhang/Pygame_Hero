@@ -13,7 +13,7 @@ class Hero(pygame.sprite.Sprite):
         self.maxHp = 80
         self.hp = 80
         self.attack = 20
-        self.coolDown = 0.5
+        self.coolDown = 0.7
         self.damageCoolDown = 2.5
         self.status = 'idle'
         self.direction = 1
@@ -31,6 +31,7 @@ class Hero(pygame.sprite.Sprite):
             'attack3' : [pygame.image.load(HERO_ASSET + f'Attack3/HeroKnight_Attack3_{i+1}.png') for i in range(0, 7)],
             'hurt': [pygame.image.load(HERO_ASSET + f'Hurt/HeroKnight_Hurt_{i+1}.png') for i in range(0, 11)],
             'block' : [pygame.image.load(HERO_ASSET + f'BlockIdle/HeroKnight_Block Idle_{i+1}.png') for i in range(0, 7)],
+            'block_success' : [pygame.image.load(HERO_ASSET + f'Block/HeroKnight_Block_{i+1}.png') for i in range(0, 4)],
             'death' : [pygame.image.load(HERO_ASSET + f'Death/HeroKnight_Death_{i+1}.png') for i in range(0, 9)]
 
         }
@@ -44,7 +45,7 @@ class Hero(pygame.sprite.Sprite):
         self.healthBar = HealthBar(self)
 
     def update(self, controls):
-        print(pygame.mixer.get_num_channels())
+
         if self.hp <= 0:
             self.status = 'death'
             if self.index == len(self.images[self.status]) - 1:
@@ -68,7 +69,8 @@ class Hero(pygame.sprite.Sprite):
                 self.status = 'run'
                 self.movement_wrapper(controls['up'], controls['down'], controls['left'], controls['right'])
             elif controls['block']:
-                self.status = 'block'
+                if self.status != 'block_success' or (self.status == 'block_sucess' and self.index ==  self.index == len(self.images[self.status]) - 1 ):
+                    self.status = 'block'
             else:
                 self.status = 'idle'
         self.index = (self.index + 1) % len(self.images[self.status])
@@ -95,26 +97,40 @@ class Hero(pygame.sprite.Sprite):
 
     def update_collisiton(self, battle):
         status = ['attack', 'attack1', 'attack2']
-        new = time.time()
         if len(battle) > 0:
             if self.status in status:
                 for monster in battle:
                     monster.hp -= self.attack
+                    if monster.direction == 1:
+                        monster.state = 'hurt_left'
+                    else:
+                        monster.state = 'hurt_right'
+                    monster.index = 0
             else:
                 for monster in battle:
-                    if new - self.lasthurt > self.damageCoolDown:
-                        self.hp -= monster.attack
-                        if self.hp > 0:
-                            pygame.mixer.music.load('assets/sounds/mixkit-human-fighter-pain-scream-2768.wav')
-                            pygame.mixer.music.play()
-                        self.lasthurt = time.time()
-                        self.index = 0
-                        self.update_hurt()
+                    if monster.state in ['attack_left', 'attack_right']:
+                        if self.status in ['block', 'block_success', 'attack2'] and self.direction == monster.direction:
+                            self.rect.x -= monster.direction * 10
+                            monster.rect.x += monster.direction * 20
+                            self.status = 'block_success'
+                            print(self.direction)
+                            print(monster.direction)
+                            #music
+                        else:
+                            new = time.time()
+                            if new - self.lasthurt > self.damageCoolDown:
+                                self.hp -= monster.attack
+                                if self.hp > 0:
+                                    pygame.mixer.music.load('assets/sounds/mixkit-human-fighter-pain-scream-2768.wav')
+                                    pygame.mixer.music.play()
+                                self.lasthurt = time.time()
+                                self.index = 0
+                                self.update_hurt(monster)
 
-    def update_hurt(self):
+    def update_hurt(self, monster):
         print('hurt')
         self.status = 'hurt'
-        self.rect.x -= self.direction * 15
+        self.rect.x -= monster.direction * 15
         self.image = self.images[self.status][self.index]
         self.index = (self.index + 1) % len(self.images[self.status])
         print(self.index)
@@ -251,8 +267,11 @@ class Skeleton_red(pygame.sprite.Sprite):
     def __init__(self, pos):
         pygame.sprite.Sprite.__init__(self)
         self.hp = 50
+        self.attack = 20
         self.state = 'born'
         self.index = 0
+        self.cd = 1.2
+        self.last = time.time()
         self.image = pygame.Surface((64,64))
         self.image_surf = pygame.image.load(Skeleton_ASSET + f'SkeletonMage_Red.png').convert()
         self.image.blit(self.image_surf,(0,0),(180,0,64,64))
@@ -291,53 +310,63 @@ class Skeleton_red(pygame.sprite.Sprite):
                       pygame.Rect(384, 1600, 64, 64)]
         }
 
-    def update(self,hero_center_pos):
-        if self.state == 'born' and self.index == 8:
-            self.state = 'idle_left'
-            self.lock = 0
-            self.index = 0
-        if self.hp < 0:
+    def update(self,hero_center_pos, game):
+        if self.state in ['hurt_left', 'hurt_right'] and self.index != len(self.image_rects[self.state]) - 1:
             if self.direction == 1:
-                self.state = 'death_left'
+                self.state = 'hurt_left'
             else:
-                self.state = 'death_right'
-            self.lock = 1
-        if (self.state == 'death_left' or self.state == 'death_right') and self.index == 6:
-            self.kill()
-        if self.lock == 0:
-            x = self.rect.centerx
-            y = self.rect.centery
-            distance = ((hero_center_pos[0]-x)**2 + (hero_center_pos[1]-y)**2)**0.5
-            if distance < 150 and distance > 20:
+                self.state = 'hurt_right'
+        else:
+            if self.state == 'born' and self.index == 8:
+                pygame.mixer.music.load('assets/sounds/WK36XX5-summon-skeleton-companion.wav')
+                pygame.mixer.music.play()
+                self.state = 'idle_left'
+                self.lock = 0
+                self.index = 0
+            if self.hp < 0:
                 if self.direction == 1:
-                    self.state = 'run_left'
-                if self.direction == -1:
-                    self.state = 'run_right'
-                if hero_center_pos[0] < x:
-                    self.direction = 1
-                    self.rect.move_ip(-1,0)
-                if hero_center_pos[0] > x:
-                    self.direction = -1
-                    self.rect.move_ip(1,0)
-                if hero_center_pos[1] < y:
-                    self.rect.move_ip(0,-1)
-                if hero_center_pos[1] > y:
-                    self.rect.move_ip(0,1)
-            if distance <= 20:
-                if self.direction == 1:
-                    self.state = 'attack_left'
-                if self.direction == -1:
-                    self.state = 'attack_right'
-            if distance >= 150:
-                if self.direction == 1:
-                    self.state = 'idle_left'
-                if self.direction == -1:
-                    self.state = 'idle_right'
+                    self.state = 'death_left'
+                else:
+                    self.state = 'death_right'
+                self.lock = 1
+            if (self.state == 'death_left' or self.state == 'death_right') and self.index == 6:
+                self.kill()
+                game.score += 1
+            if self.lock == 0:
+                x = self.rect.centerx
+                y = self.rect.centery
+                distance = ((hero_center_pos[0]-x)**2 + (hero_center_pos[1]-y)**2)**0.5
+                if distance < 550 and distance > 20:
+                    if self.direction == 1:
+                        self.state = 'run_left'
+                    if self.direction == -1:
+                        self.state = 'run_right'
+                    if hero_center_pos[0] < x:
+                        self.direction = 1
+                        self.rect.move_ip(-1,0)
+                    if hero_center_pos[0] > x:
+                        self.direction = -1
+                        self.rect.move_ip(1,0)
+                    if hero_center_pos[1] < y:
+                        self.rect.move_ip(0,-1)
+                    if hero_center_pos[1] > y:
+                        self.rect.move_ip(0,1)
+                if distance <= 30 and time.time() - self.last > self.cd:
+                    self.last = time.time()
+                    if self.direction == 1:
+                        self.state = 'attack_left'
+                    if self.direction == -1:
+                        self.state = 'attack_right'
+                if distance >= 550:
+                    if self.direction == 1:
+                        self.state = 'idle_left'
+                    if self.direction == -1:
+                        self.state = 'idle_right'
         self.index = (self.index + 1)%len(self.image_rects[self.state])
         self.image.blit(self.image_surf,(0,0),self.image_rects[self.state][self.index])
     def draw(self, surface):
-
         surface.blit(self.image, self.rect)
+
 class Warlock(pygame.sprite.Sprite):
 
     def __init__(self, pos):
@@ -457,11 +486,11 @@ class TextBox():
     def __init__(self, surface):
         self.status = 'close'
         self.surface = surface
-        self.fontobj = setup_fonts(18)
-        self.rect = pygame.Rect((0,0),(400, 200))
+        self.fontobj = setup_fonts(36)
+        self.rect = pygame.Rect((0,0),(1080, 720))
         self.rect.center = (540, 360)
         self.image_surf = pygame.image.load('pop_up.jpg').convert()
-        self.image_surf = pygame. transform. scale(self.image_surf, (400, 200))
+        self.image_surf = pygame. transform. scale(self.image_surf, (1080, 720))
 
 
 
@@ -473,15 +502,21 @@ class TextBox():
         self.status = 'pop_up'
 
 
-    def update(self, control):
+    def update(self, control, clock):
         if control['pop'] == True and self.status != 'pop_up':
             self.status = 'pop_up'
         elif control['pop'] == True and self.status == 'pop_up':
             self.status = 'close'
         if self.status == 'pop_up':
-            self.pop_up('This is a pop up window')
+            self.pop_up('Pause')
+            clock.tick(5)
 
 class GameManager():
 
-    def __init__(self) -> None:
-        pass
+    def __init__(self):
+        self.score = 0
+        self.fontobj = setup_fonts(24)
+
+    def draw(self, surface):
+         text = self.fontobj.render("Score: "+str(self.score), True, (255, 255, 255))
+         surface.blit(text,(16,80))

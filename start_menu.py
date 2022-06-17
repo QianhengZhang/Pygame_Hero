@@ -6,7 +6,7 @@ from pygame import mixer
 
 pygame.init()
 clock = pygame.time.Clock()
-screen_width = 1070
+screen_width = 1080
 screen_height = 720
 screen = pygame.display.set_mode((screen_width, screen_height))
 pygame.display.set_caption("The Medieval Knight Game!")
@@ -22,10 +22,10 @@ white = (255, 255, 255)
 black = (0, 0, 0)
 
 background = pygame.image.load("menu_background.png")
-background = pygame.transform.scale(background, (1070, 720))
+background = pygame.transform.scale(background, (1080, 720))
 
 # Background Sound
-mixer.music.load("background.wav")
+mixer.music.load("assets\sounds\epic_battle_music_1-6275.wav")
 mixer.music.play(-1)
 
 # Function to create a button

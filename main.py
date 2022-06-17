@@ -1,22 +1,22 @@
 import pygame
 import start_menu
-from model import HealthBar, Hero, Tester, TextBox
+from model import HealthBar, Hero, Tester, TextBox, Skeleton_red, GameManager
 
 def main():
-    global avatar
     pygame.init()
     window_size_x = 1080
     window_size_y = 720
     surface = pygame.display.set_mode([window_size_x,window_size_y])
-    pygame.display.set_caption('Game')
 
+    pygame.display.set_caption('Game')
+    game = GameManager()
     background = pygame.image.load('assets/imgs/Battleground2.png').convert()
     background = pygame. transform. scale(background, (window_size_x, window_size_y))
     avatar_group = pygame.sprite.GroupSingle()
-    avatar = Hero((100, 400))
+    avatar = Hero((100, 500))
     avatar_group.add(avatar)
     test_group = pygame.sprite.Group()
-    tester = Tester((550, 450))
+    tester = Skeleton_red((550, 450))
     test_group.add(tester)
     pop = TextBox(surface)
     clock = pygame.time.Clock()
@@ -25,6 +25,8 @@ def main():
     while start_page:
         start_page = start_menu.start_menu()
     pygame.mixer.music.fadeout(5000)
+    pygame.mixer.music.load("assets\sounds\epic_battle_music_1-6275.wav")
+    pygame.mixer.music.play(-1)
     while True:
         clock.tick(18)
 
@@ -34,7 +36,7 @@ def main():
         elif controls['reborn']:
             avatar_group.add(Hero((100, 400)))
         elif controls['click']:
-            test_group.add(Tester(controls['click']))
+            test_group.add(Skeleton_red(controls['click']))
         surface.blit(background, (0,0))
         avatar_group.update(controls)
         if len(avatar_group) > 0 and len(test_group) > 0:
@@ -43,10 +45,11 @@ def main():
         if len(avatar_group) > 0:
             healthBar = HealthBar(avatar_group.sprite)
             healthBar.draw(surface)
-        test_group.update()
+            test_group.update(avatar_group.sprite.rect.center, game)
         avatar_group.draw(surface)
         test_group.draw(surface)
-        pop.update(controls)
+        game.draw(surface)
+        pop.update(controls, clock)
         pygame.display.flip()
 
 
@@ -121,6 +124,7 @@ def check_events():
         controls['up'] = False
         controls['down'] = False
     return controls
+
 
 
 if __name__ == "__main__":
