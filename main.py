@@ -1,6 +1,6 @@
 import pygame
 import start_menu
-from model import HealthBar, Hero, Tester, TextBox, Skeleton_red, GameManager
+from model import  Hero, Tester, TextBox, Skeleton_red, GameManager
 
 def main():
     pygame.init()
@@ -16,11 +16,12 @@ def main():
     avatar = Hero((100, 500))
     avatar_group.add(avatar)
     test_group = pygame.sprite.Group()
-    tester = Skeleton_red((550, 450))
-    test_group.add(tester)
+    for i in range (0, 4):
+        tester = Skeleton_red((400 + 50 * i, 400 + 25 * i))
+        test_group.add(tester)
     pop = TextBox(surface)
     clock = pygame.time.Clock()
-
+    state = 'running'
     start_page = True
     while start_page:
         start_page = start_menu.start_menu()
@@ -33,25 +34,81 @@ def main():
         controls = check_events()
         if controls['quit']:
             break
-        elif controls['reborn']:
+        if controls['reborn'] and len(avatar_group) == 0:
             avatar_group.add(Hero((100, 400)))
-        elif controls['click']:
-            test_group.add(Skeleton_red(controls['click']))
-        surface.blit(background, (0,0))
-        avatar_group.update(controls)
-        if len(avatar_group) > 0 and len(test_group) > 0:
-            battle = pygame.sprite.spritecollide(avatar_group.sprite, test_group, dokill=False, collided=pygame.sprite.collide_mask)
-            avatar_group.sprite.update_collisiton(battle)
-        if len(avatar_group) > 0:
-            healthBar = HealthBar(avatar_group.sprite)
-            healthBar.draw(surface)
-            test_group.update(avatar_group.sprite.rect.center, game)
-        avatar_group.draw(surface)
-        test_group.draw(surface)
-        game.draw(surface)
-        pop.update(controls, clock)
+        if len(avatar_group) == 0 and state != 'pause':
+            controls['pop'] = True
+        if controls['pop']:
+            state = pop.update(controls)
+        if state == 'pause':
+            if len(avatar_group) == 0:
+                score = str(game.score)
+                pop.pop_up(['You are dead', 'Current Score is ' + score,'Press R to rejoin the fight!'])
+                game.score = 0
+            else:
+                pop.pop_up(['Notes:', 'Press Q to quit', 'Press P to resume the game!'])
+        else:
+            if controls['click']:
+                print(controls['click'])
+                test_group.add(Skeleton_red(controls['click']))
+            surface.blit(background, (0,0))
+            avatar_group.update(controls)
+            if len(avatar_group) > 0 and len(test_group) > 0:
+                battle = pygame.sprite.spritecollide(avatar_group.sprite, test_group, dokill=False, collided=pygame.sprite.collide_mask)
+                avatar_group.sprite.update_collisiton(battle)
+            if len(avatar_group) > 0:
+                test_group.update(avatar_group.sprite.rect.center, game)
+                draw_health_bar(avatar_group.sprite, surface)
+            avatar_group.draw(surface)
+            test_group.draw(surface)
+            game.draw(surface)
         pygame.display.flip()
 
+def draw_health_bar(hero, surface):
+    font = setup_fonts(24)
+    max_width = 240
+    width = hero.hp/hero.maxHp * 240
+    number = str(int(hero.hp)) + '/' + str(hero.maxHp)
+    height = 30
+    text_pos = (20, 50)
+    text_rect = hero.image.get_rect(topleft=text_pos)
+    number_pos = (65 + max_width, 50)
+    number_rect = hero.image.get_rect(topleft=number_pos)
+    text_surface = font.render('HP:', True, (255, 255, 255))
+    number_surface = font.render(number, True, (255, 255, 255))
+    base_bar_rect = pygame.Rect(60, 53, max_width, height)
+    bar_rect = pygame.Rect(60, 53, width, height)
+    base_color = (120, 120, 120)
+    color = (255,0,0)
+    surface.blit(text_surface, text_rect)
+    pygame.draw.rect(surface, base_color, base_bar_rect)
+    pygame.draw.rect(surface, color, bar_rect)
+    pygame.draw.rect(surface, (0,0,0), base_bar_rect, 2)
+    surface.blit(number_surface, number_rect)
+
+def setup_fonts(font_size, bold=False, italic=False):
+    ''' Load a font, given a list of preferences
+
+        The preference list is a sorted list of strings (should probably be a parameter),
+        provided in a form from the FontBook list.
+        Any available font that starts with the same letters (lowercased, spaces removed)
+        as a font in the font_preferences list will be loaded.
+        If no font can be found from the preferences list, the pygame default will be returned.
+
+        returns -- A Font object
+    '''
+    font_preferences = ['Helvetica Neue', 'Iosevka Regular', 'Comic Sans', 'Courier New']
+    available = pygame.font.get_fonts()
+    prefs = [x.lower().replace(' ', '') for x in font_preferences]
+    for pref in prefs:
+        a = [x
+             for x in available
+             if x.startswith(pref)
+            ]
+        if a:
+            fonts = ','.join(a) #SysFont expects a string with font names in it
+            return pygame.font.SysFont(fonts, font_size, bold, italic)
+    return pygame.font.SysFont(None, font_size, bold, italic)
 
 def check_events():
     ''' A controller of sorts.  Looks for Quit, arrow type events.  Space initiates a jump.

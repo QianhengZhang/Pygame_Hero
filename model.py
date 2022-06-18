@@ -10,8 +10,8 @@ class Hero(pygame.sprite.Sprite):
 
     def __init__(self, pos):
         pygame.sprite.Sprite.__init__(self)
-        self.maxHp = 80
-        self.hp = 80
+        self.maxHp = 100
+        self.hp = 100
         self.attack = 20
         self.coolDown = 0.7
         self.damageCoolDown = 2.5
@@ -42,7 +42,6 @@ class Hero(pygame.sprite.Sprite):
         self.image.set_colorkey((0,0,0))
         self.mask = pygame.mask.from_surface(self.image)
         self.rect = self.image.get_rect(topleft=pos)
-        self.healthBar = HealthBar(self)
 
     def update(self, controls):
 
@@ -53,6 +52,8 @@ class Hero(pygame.sprite.Sprite):
                 pygame.mixer.music.load('assets/sounds/mixkit-player-losing-or-failing-2042.wav')
                 pygame.mixer.music.play()
         new = time.time()
+        if self.status == 'block_sucess' and self.index == len(self.images[self.status]) - 1:
+            self.status = 'block'
         if self.index == len(self.images[self.status]) - 1 or self.status in ['idle', 'run', 'block'] and self.status != 'death':
             if controls['attack'] and (new-self.last > self.coolDown):
                 pygame.mixer.music.load('assets/sounds/mixkit-sword-blade-attack-in-medieval-battle-2762.wav')
@@ -69,7 +70,7 @@ class Hero(pygame.sprite.Sprite):
                 self.status = 'run'
                 self.movement_wrapper(controls['up'], controls['down'], controls['left'], controls['right'])
             elif controls['block']:
-                if self.status != 'block_success' or (self.status == 'block_sucess' and self.index ==  self.index == len(self.images[self.status]) - 1 ):
+                if self.status != 'block_success' or (self.status == 'block_success' and self.index == len(self.images[self.status]) - 1 ):
                     self.status = 'block'
             else:
                 self.status = 'idle'
@@ -82,14 +83,14 @@ class Hero(pygame.sprite.Sprite):
     def movement_wrapper(self, up, down, left, right):
         x = 0
         y = 0
-        if up:
+        if up and self.rect.y > 374:
             y = -1
-        elif down:
+        elif down and self.rect.y < 670:
             y = 1
-        if left:
+        if left and self.rect.x > 0:
             x = -1
             self.direction = -1
-        elif right:
+        elif right and self.rect.x < 1000:
             x = 1
             self.direction = 1
         self.rect.x += x * self.velocity
@@ -97,25 +98,27 @@ class Hero(pygame.sprite.Sprite):
 
     def update_collisiton(self, battle):
         status = ['attack', 'attack1', 'attack2']
+        new = time.time()
         if len(battle) > 0:
             if self.status in status:
                 for monster in battle:
-                    monster.hp -= self.attack
-                    if monster.direction == 1:
-                        monster.state = 'hurt_left'
-                    else:
-                        monster.state = 'hurt_right'
-                    monster.index = 0
+                    if (new- monster.last_hurt > monster.hurt_cd):
+                        monster.last_hurt = time.time()
+                        monster.hp -= self.attack
+                        if monster.direction == 1:
+                            monster.state = 'hurt_left'
+                        else:
+                            monster.state = 'hurt_right'
+                        monster.index = 0
             else:
                 for monster in battle:
                     if monster.state in ['attack_left', 'attack_right']:
                         if self.status in ['block', 'block_success', 'attack2'] and self.direction == monster.direction:
                             self.rect.x -= monster.direction * 10
                             monster.rect.x += monster.direction * 20
+                            self.hp -= monster.attack * 0.1
                             self.status = 'block_success'
-                            print(self.direction)
-                            print(monster.direction)
-                            #music
+                            self.index = 0
                         else:
                             new = time.time()
                             if new - self.lasthurt > self.damageCoolDown:
@@ -139,6 +142,7 @@ class Hero(pygame.sprite.Sprite):
             print('end')
         if self.direction == -1:
             self.image = pygame.transform.flip(self.image, True, False)
+
 
     def draw(self, surface):
         surface.blit(self.image, self.rect)
@@ -267,9 +271,11 @@ class Skeleton_red(pygame.sprite.Sprite):
     def __init__(self, pos):
         pygame.sprite.Sprite.__init__(self)
         self.hp = 50
-        self.attack = 20
+        self.attack = 15
         self.state = 'born'
         self.index = 0
+        self.hurt_cd = 0.3
+        self.last_hurt = time.time()
         self.cd = 1.2
         self.last = time.time()
         self.image = pygame.Surface((64,64))
@@ -336,7 +342,7 @@ class Skeleton_red(pygame.sprite.Sprite):
                 x = self.rect.centerx
                 y = self.rect.centery
                 distance = ((hero_center_pos[0]-x)**2 + (hero_center_pos[1]-y)**2)**0.5
-                if distance < 550 and distance > 20:
+                if distance < 350 and distance > 20:
                     if self.direction == 1:
                         self.state = 'run_left'
                     if self.direction == -1:
@@ -357,7 +363,7 @@ class Skeleton_red(pygame.sprite.Sprite):
                         self.state = 'attack_left'
                     if self.direction == -1:
                         self.state = 'attack_right'
-                if distance >= 550:
+                if distance >= 350:
                     if self.direction == 1:
                         self.state = 'idle_left'
                     if self.direction == -1:
@@ -435,28 +441,6 @@ class Warlock(pygame.sprite.Sprite):
     def draw(self, surface):
         surface.blit(self.image, self.rect)
 
-class HealthBar():
-
-    def __init__(self, hero):
-        self.healthPoint = hero.hp
-        self.image = pygame.image.load('assets/imgs/heart.png').convert()
-        self.image = pygame. transform. scale(self.image, (40, 40))
-        self.image.set_colorkey((0,0,0))
-        self.pos = (55, 50)
-        self.rect = self.image.get_rect(topleft=self.pos)
-        self.fontobj = setup_fonts(24)
-        self.text_pos = (20, 50)
-        self.text_rect = self.image.get_rect(topleft=self.text_pos)
-
-    def draw(self, surface):
-        text_surface = self.fontobj.render('HP:', True, (255, 255, 255))
-        surface.blit(text_surface, self.text_rect)
-        number = self.healthPoint // 20
-        for i in range(number):
-            surface.blit(self.image, self.rect)
-            self.rect.x += 40
-        self.rect = self.image.get_rect(topleft=self.pos)
-
 def setup_fonts(font_size, bold=False, italic=False):
     ''' Load a font, given a list of preferences
 
@@ -494,22 +478,25 @@ class TextBox():
 
 
 
-    def pop_up(self, text):
-        text_surface = self.fontobj.render(text, True, (255, 255, 255))
-        text_rect = text_surface.get_rect(center = self.rect.center)
+    def pop_up(self, texts):
+        row = len(texts)
         self.surface.blit(self.image_surf, self.rect)
-        self.surface.blit(text_surface, text_rect)
+        for i in range(0, row):
+            text = texts[i]
+            text_surface = self.fontobj.render(text, True, (255, 255, 255))
+            text_center = (540, 120 + (360 / (row + 1)) * (i+1))
+            text_rect = text_surface.get_rect(center = text_center)
+            self.surface.blit(text_surface, text_rect)
         self.status = 'pop_up'
 
 
-    def update(self, control, clock):
+    def update(self, control):
         if control['pop'] == True and self.status != 'pop_up':
             self.status = 'pop_up'
+            return 'pause'
         elif control['pop'] == True and self.status == 'pop_up':
             self.status = 'close'
-        if self.status == 'pop_up':
-            self.pop_up('Pause')
-            clock.tick(5)
+            return 'running'
 
 class GameManager():
 
