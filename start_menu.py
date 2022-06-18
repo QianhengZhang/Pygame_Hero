@@ -6,7 +6,7 @@ from pygame import mixer
 
 pygame.init()
 clock = pygame.time.Clock()
-screen_width = 1070
+screen_width = 1080
 screen_height = 720
 screen = pygame.display.set_mode((screen_width, screen_height))
 pygame.display.set_caption("The Medieval Knight Game!")
@@ -22,7 +22,7 @@ white = (255, 255, 255)
 black = (0, 0, 0)
 
 background = pygame.image.load("menu_background.png")
-background = pygame.transform.scale(background, (1070, 720))
+background = pygame.transform.scale(background, (1080, 720))
 
 # Background Sound
 mixer.music.load("background.wav")
@@ -51,12 +51,12 @@ def start_menu():
         screen.fill((0, 0, 0))
         screen.blit(todayText, (5, 10))
         screen.blit(startText, ((screen_width - startText.get_width()) / 2, 0))
-        
+
         # start button (left, top, width, height)
         start_button = create_button(screen_width - 130, 7, 125, 26, lightgrey, slategrey)
 
         if start_button:
-           return False 
+           return False
 
         # Start button text
         startbuttontext = smallfont.render("Start the Game!", True, blackish)
