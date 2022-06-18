@@ -44,7 +44,6 @@ class Hero(pygame.sprite.Sprite):
         self.rect = self.image.get_rect(topleft=pos)
 
     def update(self, controls):
-
         if self.hp <= 0:
             self.status = 'death'
             if self.index == len(self.images[self.status]) - 1:
@@ -96,7 +95,7 @@ class Hero(pygame.sprite.Sprite):
         self.rect.x += x * self.velocity
         self.rect.y += y * self.velocity
 
-    def update_collisiton(self, battle):
+    def update_collision(self, battle):
         status = ['attack', 'attack1', 'attack2']
         new = time.time()
         if len(battle) > 0:
@@ -105,10 +104,13 @@ class Hero(pygame.sprite.Sprite):
                     if (new- monster.last_hurt > monster.hurt_cd):
                         monster.last_hurt = time.time()
                         monster.hp -= self.attack
-                        if monster.direction == 1:
+                        if monster.type == 'warlock':
+                              monster.state = 'hurt'
+                        elif monster.direction == 1:
                             monster.state = 'hurt_left'
                         else:
                             monster.state = 'hurt_right'
+
                         monster.index = 0
             else:
                 for monster in battle:
@@ -120,7 +122,6 @@ class Hero(pygame.sprite.Sprite):
                             self.status = 'block_success'
                             self.index = 0
                         else:
-                            new = time.time()
                             if new - self.lasthurt > self.damageCoolDown:
                                 self.hp -= monster.attack
                                 if self.hp > 0:
@@ -129,6 +130,25 @@ class Hero(pygame.sprite.Sprite):
                                 self.lasthurt = time.time()
                                 self.index = 0
                                 self.update_hurt(monster)
+
+    def update_bullet_collision(self, battle):
+        new = time.time()
+        for bullet in battle:
+            if self.status in ['block', 'block_success', 'attack2'] and self.direction == bullet.direction:
+                self.rect.x -= bullet.direction * 10
+                self.hp -= bullet.damage * 0.1
+                self.status = 'block_success'
+                self.index = 0
+            else:
+                if new - self.lasthurt > self.damageCoolDown:
+                    self.hp -= bullet.damage
+                    if self.hp > 0:
+                        pygame.mixer.music.load('assets/sounds/mixkit-human-fighter-pain-scream-2768.wav')
+                        pygame.mixer.music.play()
+                        self.lasthurt = time.time()
+                        self.index = 0
+                        self.update_hurt(bullet)
+            bullet.kill()
 
     def update_hurt(self, monster):
         print('hurt')
@@ -270,11 +290,12 @@ class Skeleton_red(pygame.sprite.Sprite):
 
     def __init__(self, pos):
         pygame.sprite.Sprite.__init__(self)
+        self.type = 'skeleton'
         self.hp = 50
         self.attack = 15
         self.state = 'born'
         self.index = 0
-        self.hurt_cd = 0.3
+        self.hurt_cd = 0.2
         self.last_hurt = time.time()
         self.cd = 1.2
         self.last = time.time()
@@ -337,7 +358,7 @@ class Skeleton_red(pygame.sprite.Sprite):
                 self.lock = 1
             if (self.state == 'death_left' or self.state == 'death_right') and self.index == 6:
                 self.kill()
-                game.score += 1
+                game.score += 20
             if self.lock == 0:
                 x = self.rect.centerx
                 y = self.rect.centery
@@ -380,15 +401,18 @@ class Warlock(pygame.sprite.Sprite):
         self.maxHp = 40
         self.hp = 40
         self.attack = 10
-        self.coolDown = 5
+        self.coolDown = 4
         self.damageCoolDown = 1.5
-        self.status = 'idle'
+        self.state = 'idle'
+        self.type = 'warlock'
         self.direction = -1
         self.velocity = 3
         self.index = 0
         self.lock = 0
         self.last = time.time()
         self.lasthurt = time.time()
+        self.hurt_cd = 0.2
+        self.last_hurt = time.time()
         self.images = {
             'idle': [pygame.image.load(Warlock_ASSET + f'Idle/Warlock_Idle_{i}.png') for i in range(0, 12)],
             'run': [pygame.image.load(Warlock_ASSET + f'Run/Warlock_Run_{i}.png') for i in range(0, 8)],
@@ -404,55 +428,65 @@ class Warlock(pygame.sprite.Sprite):
         self.mask = pygame.mask.from_surface(self.image)
         self.rect = self.image.get_rect(topleft=pos)
         self.fire = 0
-    def update(self,hero_center_pos):
+    def update(self,hero_center_pos, game):
         new = time.time()
-        if self.hp < 0:
-            self.status = 'death'
-            self.lock = 1
-        if self.status == 'death' and self.index == 12:
-            self.kill()
-        if self.lock == 0:
-            x = self.rect.centerx
-            y = self.rect.centery
-            distance = ((hero_center_pos[0] - x) ** 2 + (hero_center_pos[1] - y) ** 2) ** 0.5
-            if distance < 300:
-                self.status = 'run'
-                if hero_center_pos[0] < x:
-                    self.direction = -1
-                    self.rect.move_ip(-1, 0)
-                if hero_center_pos[0] > x:
-                    self.direction = 1
-                    self.rect.move_ip(1, 0)
-                if hero_center_pos[1] < y:
-                    self.rect.move_ip(0, -1)
-                if hero_center_pos[1] > y:
-                    self.rect.move_ip(0, 1)
-            if distance >= 300:
-                self.status = 'idle'
-        if self.lock != 1 and (hero_center_pos[1] == self.rect.centery) and (new - self.last > self.coolDown):
-            self.status = 'attack'
-            self.lock = 2
-            self.fire = 1
-            self.index = 0
-            self.last = time.time()
-        if self.fire == 1 and self.index == 1:
-            self.fire = 0
-        if self.lock == 2 and self.index == 12:
-            self.status = 'idle'
-            self.lock = 0
-        self.index = (self.index + 1) % len(self.images[self.status])
-        self.image = self.images[self.status][self.index]
+        if self.state =='hurt' and self.index != len(self.images[self.state]) - 1:
+            self.state = 'hurt'
+        else:
+            if self.hp < 0:
+                self.state = 'death'
+                self.lock = 1
+            if self.state == 'death' and self.index == 12:
+                self.kill()
+                game.score += 50
+            if self.lock == 0:
+                x = self.rect.centerx
+                y = self.rect.centery
+                distance = ((hero_center_pos[0] - x) ** 2 + (hero_center_pos[1] - y) ** 2) ** 0.5
+                if distance < 400 and distance > 150:
+                    self.state = 'run'
+                    if hero_center_pos[0] < x:
+                        self.direction = -1
+                        self.rect.move_ip(-1, 0)
+                    if hero_center_pos[0] > x:
+                        self.direction = 1
+                        self.rect.move_ip(1, 0)
+                    if hero_center_pos[1] < y:
+                        self.rect.move_ip(0, -1)
+                    if hero_center_pos[1] > y:
+                        self.rect.move_ip(0, 1)
+                if distance >= 400 or distance <= 150:
+                    if hero_center_pos[0] < x:
+                        self.direction = -1
+                    if hero_center_pos[0] > x:
+                        self.direction = 1
+                    self.state = 'idle'
+            if self.lock != 1 and (self.rect.centery > hero_center_pos[1] - 30 and self.rect.centery < hero_center_pos[1] + 30) and (new - self.last > self.coolDown):
+                self.state = 'attack'
+                self.lock = 2
+                self.fire = 1
+                self.index = 0
+                self.last = time.time()
+            if self.fire == 1 and self.index == 1:
+                self.fire = 0
+            if self.lock == 2 and self.index == 12:
+                self.state = 'idle'
+                self.lock = 0
+        self.index = (self.index + 1) % len(self.images[self.state])
+        self.image = self.images[self.state][self.index]
         self.mask = pygame.mask.from_surface(self.image)
         if self.direction == -1:
             self.image = pygame.transform.flip(self.image, True, False)
     def draw(self, surface):
         surface.blit(self.image, self.rect)
 
-        
+
 class Warlock_bullet(pygame.sprite.Sprite):
     def __init__(self,pos,direction):
         pygame.sprite.Sprite.__init__(self)
         self.index = 0
+        self.type = 'bullet'
+        self.damage = 20
         self.direction = direction
         self.images = [pygame.image.load('assets/imgs/Sprites/LightningBolt/' +f'LightningBolt_{i}.png') for i in range(0, 3)]
         image_surf = pygame.image.load('assets/imgs/Sprites/LightningBolt/LightningBolt_0.png').convert()
@@ -463,7 +497,7 @@ class Warlock_bullet(pygame.sprite.Sprite):
         if direction == 1:
             self.rect = self.image.get_rect(topleft=pos)
         if direction == -1:
-            self.rect = self.image.get_rect(topleft=pos)   
+            self.rect = self.image.get_rect(topleft=pos)
     def update(self):
         if self.direction == 1:
             if self.rect.x < -40:
@@ -478,8 +512,8 @@ class Warlock_bullet(pygame.sprite.Sprite):
         if self.direction == 1:
             self.image = pygame.transform.flip(self.image, True, False)
     def draw(self, surface):
-        surface.blit(self.image, self.rect)            
-            
+        surface.blit(self.image, self.rect)
+
 def setup_fonts(font_size, bold=False, italic=False):
     ''' Load a font, given a list of preferences
 
