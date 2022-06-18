@@ -167,6 +167,33 @@ class Hero(pygame.sprite.Sprite):
     def draw(self, surface):
         surface.blit(self.image, self.rect)
 
+class Fire(pygame.sprite.Sprite):
+    def __init__(self,pos):
+        pygame.sprite.Sprite.__init__(self)
+        self.index = 0
+        self.images = [[pygame.image.load('assets/imgs/Sprites/SmallFire/' +f'SmallFire_{i}.png') for i in range(0, 5)],
+                       [pygame.image.load('assets/imgs/Sprites/Flamevortex/' +f'Flamevortex_{i}.png') for i in range(0, 9)]]
+        image_surf = pygame.image.load('assets/imgs/Sprites/SmallFire/SmallFire_0.png').convert()
+        self.image = pygame.Surface((30, 60))
+        self.image.blit(image_surf, (0, 0))
+        self.image.set_colorkey((0, 0, 0))
+        self.mask = pygame.mask.from_surface(self.image)
+        self.rect = self.image.get_rect(topleft=pos)
+        self.count = 20
+    def update(self):
+        if self.count <= 100:
+            self.image = self.images[0][self.index]
+            self.index = (self.index + 1) % 5
+        if self.count > 100:
+            self.image = self.images[1][self.index]
+            self.index = (self.index + 1) % 9
+        if self.count > 200:
+            self.kill()
+        self.count += 1
+
+    def draw(self, surface):
+        surface.blit(self.image, self.rect)
+        
 class Tester(pygame.sprite.Sprite):
 
     def __init__(self, pos):
