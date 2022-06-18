@@ -464,7 +464,21 @@ class Warlock_bullet(pygame.sprite.Sprite):
             self.rect = self.image.get_rect(topleft=pos)
         if direction == -1:
             self.rect = self.image.get_rect(topleft=pos)   
-            
+    def update(self):
+        if self.direction == 1:
+            if self.rect.x < -40:
+                self.kill()
+            self.rect.move_ip(-8,0)
+        if self.direction == -1:
+            if self.rect.x > 800:
+                self.kill()
+            self.rect.move_ip(8,0)
+        self.index = (self.index + 1) % (len(self.images))
+        self.image = self.images[self.index]
+        if self.direction == 1:
+            self.image = pygame.transform.flip(self.image, True, False)
+    def draw(self, surface):
+        surface.blit(self.image, self.rect)            
             
 def setup_fonts(font_size, bold=False, italic=False):
     ''' Load a font, given a list of preferences
