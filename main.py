@@ -1,6 +1,6 @@
 import pygame
 import start_menu
-from model import  Hero, Tester, TextBox, Skeleton_red, GameManager
+from model import  Hero, Tester, TextBox, Skeleton_red, GameManager, Warlock, Warlock_bullet
 
 def main():
     pygame.init()
@@ -16,9 +16,12 @@ def main():
     avatar = Hero((100, 500))
     avatar_group.add(avatar)
     test_group = pygame.sprite.Group()
+    warlock_group = pygame.sprite.Group()
+    bullet_group = pygame.sprite.Group()
     for i in range (0, 4):
         tester = Skeleton_red((400 + 50 * i, 400 + 25 * i))
         test_group.add(tester)
+    warlock_group.add(Warlock((550, 600)))
     pop = TextBox(surface)
     clock = pygame.time.Clock()
     state = 'running'
@@ -53,12 +56,25 @@ def main():
                 test_group.add(Skeleton_red(controls['click']))
             surface.blit(background, (0,0))
             avatar_group.update(controls)
+            bullet_group.update()
             if len(avatar_group) > 0 and len(test_group) > 0:
                 battle = pygame.sprite.spritecollide(avatar_group.sprite, test_group, dokill=False, collided=pygame.sprite.collide_mask)
                 avatar_group.sprite.update_collisiton(battle)
+            if len(avatar_group) > 0 and len(warlock_group) > 0:
+                battle = pygame.sprite.spritecollide(avatar_group.sprite, warlock_group, dokill=False, collided=pygame.sprite.collide_mask)
+                avatar_group.sprite.update_collisiton(battle)
+                for warlock_sprite in warlock_group.sprites():
+                    if warlock_sprite.fire == 1:
+                        bullet_group.add(Warlock_bullet(warlock_sprite.rect.center,-(warlock_sprite.direction)))
+            if len(avatar_group) > 0 and len(bullet_group) > 0:
+                battle = pygame.sprite.spritecollide(avatar_group.sprite, bullet_group, dokill=True, collided=pygame.sprite.collide_mask)
+                avatar_group.sprite.update_collisiton(battle)
             if len(avatar_group) > 0:
                 test_group.update(avatar_group.sprite.rect.center, game)
+                warlock_group.update(avatar_group.sprite.rect.center)
                 draw_health_bar(avatar_group.sprite, surface)
+            warlock_group.draw(surface)
+            bullet_group.draw(surface)
             avatar_group.draw(surface)
             test_group.draw(surface)
             game.draw(surface)
