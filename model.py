@@ -383,9 +383,10 @@ class Warlock(pygame.sprite.Sprite):
         self.coolDown = 5
         self.damageCoolDown = 1.5
         self.status = 'idle'
-        self.direction = 1
+        self.direction = -1
         self.velocity = 3
         self.index = 0
+        self.lock = 0
         self.last = time.time()
         self.lasthurt = time.time()
         self.images = {
@@ -393,7 +394,7 @@ class Warlock(pygame.sprite.Sprite):
             'run': [pygame.image.load(Warlock_ASSET + f'Run/Warlock_Run_{i}.png') for i in range(0, 8)],
             'death': [pygame.image.load(Warlock_ASSET + f'Death/Warlock_Death_{i}.png') for i in range(0, 13)],
             'attack' : [pygame.image.load(Warlock_ASSET + f'Attack/Warlock_Attack_{i}.png') for i in range(0, 13)],
-            'hurt': [pygame.image.load(Warlock_ASSET + f'Hurt/Warlock_Hurt_{i}.png') for i in range(0, 5)],
+            'hurt': [pygame.image.load(Warlock_ASSET + f'Hurt/Warlock_Hurt_{i}.png') for i in range(0, 4)],
         }
 
         image_surf = pygame.image.load(Warlock_ASSET + 'idle/Warlock_Idle_0.png').convert()
@@ -402,45 +403,69 @@ class Warlock(pygame.sprite.Sprite):
         self.image.set_colorkey((0,0,0))
         self.mask = pygame.mask.from_surface(self.image)
         self.rect = self.image.get_rect(topleft=pos)
-
-    def update(self,controls):
+        self.fire = 0
+    def update(self,hero_center_pos):
         new = time.time()
-        if self.hp <= 0:
-            self.status = "death"
-            if self.index == 12:
-                self.kill()
-        if controls['attack'] and (new-self.last > self.coolDown):
-            self.status = "attack"
+        if self.hp < 0:
+            self.status = 'death'
+            self.lock = 1
+        if self.status == 'death' and self.index == 12:
+            self.kill()
+        if self.lock == 0:
+            x = self.rect.centerx
+            y = self.rect.centery
+            distance = ((hero_center_pos[0] - x) ** 2 + (hero_center_pos[1] - y) ** 2) ** 0.5
+            if distance < 300:
+                self.status = 'run'
+                if hero_center_pos[0] < x:
+                    self.direction = -1
+                    self.rect.move_ip(-1, 0)
+                if hero_center_pos[0] > x:
+                    self.direction = 1
+                    self.rect.move_ip(1, 0)
+                if hero_center_pos[1] < y:
+                    self.rect.move_ip(0, -1)
+                if hero_center_pos[1] > y:
+                    self.rect.move_ip(0, 1)
+            if distance >= 300:
+                self.status = 'idle'
+        if self.lock != 1 and (hero_center_pos[1] == self.rect.centery) and (new - self.last > self.coolDown):
+            self.status = 'attack'
+            self.lock = 2
+            self.fire = 1
             self.index = 0
             self.last = time.time()
-        elif controls['up']:
-            self.status = 'run'
-            self.rect.y -= self.velocity
-        elif controls['down']:
-            self.status = 'run'
-            self.rect.y += self.velocity
-        elif controls['left']:
-            self.direction = -1
-            self.status = 'run'
-            self.rect.x -= self.velocity
-        elif controls['right']:
-            self.direction = 1
-            self.status = 'run'
-            self.rect.x += self.velocity
-        elif controls['hurt']:
-            self.status = 'hurt'
-            self.index = 0
-        else:
+        if self.fire == 1 and self.index == 1:
+            self.fire = 0
+        if self.lock == 2 and self.index == 12:
             self.status = 'idle'
+            self.lock = 0
         self.index = (self.index + 1) % len(self.images[self.status])
         self.image = self.images[self.status][self.index]
         self.mask = pygame.mask.from_surface(self.image)
         if self.direction == -1:
             self.image = pygame.transform.flip(self.image, True, False)
-
     def draw(self, surface):
         surface.blit(self.image, self.rect)
 
+        
+class Warlock_bullet(pygame.sprite.Sprite):
+    def __init__(self,pos,direction):
+        pygame.sprite.Sprite.__init__(self)
+        self.index = 0
+        self.direction = direction
+        self.images = [pygame.image.load('assets/imgs/Sprites/LightningBolt/' +f'LightningBolt_{i}.png') for i in range(0, 3)]
+        image_surf = pygame.image.load('assets/imgs/Sprites/LightningBolt/LightningBolt_0.png').convert()
+        self.image = pygame.Surface((30, 40))
+        self.image.blit(image_surf, (0, 0))
+        self.image.set_colorkey((0, 0, 0))
+        self.mask = pygame.mask.from_surface(self.image)
+        if direction == 1:
+            self.rect = self.image.get_rect(topleft=pos)
+        if direction == -1:
+            self.rect = self.image.get_rect(topleft=pos)   
+            
+            
 def setup_fonts(font_size, bold=False, italic=False):
     ''' Load a font, given a list of preferences
 
