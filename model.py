@@ -1,6 +1,7 @@
 from turtle import update
 import pygame
 import time
+import random
 
 HERO_ASSET = 'assets/imgs/Sprites/HeroKnight/'
 Warlock_ASSET = 'assets/imgs/Sprites/Warlock/'
@@ -105,12 +106,12 @@ class Hero(pygame.sprite.Sprite):
                         monster.last_hurt = time.time()
                         monster.hp -= self.attack
                         if monster.type == 'warlock':
-                              monster.state = 'hurt'
+                            monster.state = 'hurt'
+                            monster.lock = 0
                         elif monster.direction == 1:
                             monster.state = 'hurt_left'
                         else:
                             monster.state = 'hurt_right'
-
                         monster.index = 0
             else:
                 for monster in battle:
@@ -134,21 +135,23 @@ class Hero(pygame.sprite.Sprite):
     def update_bullet_collision(self, battle):
         new = time.time()
         for bullet in battle:
-            if self.status in ['block', 'block_success', 'attack2'] and self.direction == bullet.direction:
-                self.rect.x -= bullet.direction * 10
-                self.hp -= bullet.damage * 0.1
-                self.status = 'block_success'
-                self.index = 0
-            else:
-                if new - self.lasthurt > self.damageCoolDown:
-                    self.hp -= bullet.damage
-                    if self.hp > 0:
-                        pygame.mixer.music.load('assets/sounds/mixkit-human-fighter-pain-scream-2768.wav')
-                        pygame.mixer.music.play()
-                        self.lasthurt = time.time()
-                        self.index = 0
-                        self.update_hurt(bullet)
-            bullet.kill()
+            if bullet.type == 'fire' and bullet.status == 'vortex' or bullet.type == 'bullet':
+                if self.status in ['block', 'block_success', 'attack2'] and (self.direction == bullet.direction):
+                    self.rect.x -= bullet.direction * 10
+                    self.hp -= bullet.damage * 0.1
+                    self.status = 'block_success'
+                    self.index = 0
+                else:
+                    if new - self.lasthurt > self.damageCoolDown:
+                        self.hp -= bullet.damage
+                        if self.hp > 0:
+                            pygame.mixer.music.load('assets/sounds/mixkit-human-fighter-pain-scream-2768.wav')
+                            pygame.mixer.music.play()
+                            self.lasthurt = time.time()
+                            self.index = 0
+                            self.update_hurt(bullet)
+                if bullet.type == 'bullet':
+                    bullet.kill()
 
     def update_hurt(self, monster):
         print('hurt')
@@ -171,25 +174,34 @@ class Fire(pygame.sprite.Sprite):
     def __init__(self,pos):
         pygame.sprite.Sprite.__init__(self)
         self.index = 0
-        self.images = [[pygame.image.load('assets/imgs/Sprites/SmallFire/' +f'SmallFire_{i}.png') for i in range(0, 5)],
-                       [pygame.image.load('assets/imgs/Sprites/Flamevortex/' +f'Flamevortex_{i}.png') for i in range(0, 9)]]
+        self.images = {
+            'small' :[pygame.image.load('assets/imgs/Sprites/SmallFire/' +f'SmallFire_{i}.png') for i in range(0, 5)],
+            'vortex' : [pygame.image.load('assets/imgs/Sprites/Flamevortex/' +f'Flamevortex_{i}.png') for i in range(0, 9)]
+        }
         image_surf = pygame.image.load('assets/imgs/Sprites/SmallFire/SmallFire_0.png').convert()
         self.image = pygame.Surface((30, 60))
+        self.damage = 15
+        self.direction = 0
+        self.status = 'small'
+        self.type = 'fire'
         self.image.blit(image_surf, (0, 0))
         self.image.set_colorkey((0, 0, 0))
         self.mask = pygame.mask.from_surface(self.image)
         self.rect = self.image.get_rect(topleft=pos)
         self.count = 20
+
     def update(self):
-        if self.count <= 100:
-            self.image = self.images[0][self.index]
+        if self.count <= 150:
+            self.status = 'small'
+            self.image = self.images[self.status][self.index]
             self.index = (self.index + 1) % 5
-        if self.count > 100:
-            self.image = self.images[1][self.index]
+        if self.count > 150:
+            self.status = 'vortex'
+            self.image = self.images[self.status][self.index]
             self.index = (self.index + 1) % 9
-        if self.count > 200:
+        if self.count > 300:
             self.kill()
-        self.count += 1
+        self.count += 4
 
     def draw(self, surface):
         surface.blit(self.image, self.rect)
@@ -206,21 +218,33 @@ class Portal(pygame.sprite.Sprite):
         self.mask = pygame.mask.from_surface(self.image)
         self.rect = self.image.get_rect(topleft=pos)
         self.lock = 0
+        self.status = 'open'
+
     def update(self):
-        if self.lock == 0:
-            self.image = self.images[self.index]
-            self.index += 1
-        if self.lock == 0 and self.index == 10:
-            self.index == 4
-            self.lock = 1
-        if self.lock == 1:
-            if self.index == 10:
-                self.index = 4
-            self.image = self.images[self.index]
-            self.index += 1
+        print(self.status)
+        print(self.index)
+        print(self.lock)
+        if self.status == 'open':
+            if self.lock == 0 and self.index != 10:
+                self.image = self.images[self.index]
+                #self.index += 1
+            elif self.lock == 0 and self.index == 10:
+                self.index == 4
+                self.lock = 1
+            elif self.lock == 1:
+                if self.index == 11:
+                    self.index = 4
+        elif self.status == 'close':
+            if self.index < 10:
+                self.index = 11
+            elif self.index == 14:
+                self.kill()
+        self.image = self.images[self.index]
+        self.index += 1
+
     def draw(self, surface):
         surface.blit(self.image, self.rect)
-        
+
 class Tester(pygame.sprite.Sprite):
 
     def __init__(self, pos):
@@ -359,6 +383,8 @@ class Skeleton_red(pygame.sprite.Sprite):
         self.image.set_colorkey((0,0,0))
         self.rect = self.image.get_rect(topleft=pos)
         self.lock = 1
+        self.speed = random.randrange(1, 4)
+        self.count = 2
         self.direction = 1
         self.image_rects = {
             'idle_left' : [pygame.Rect(0,64,64,64), pygame.Rect(64,64,64,64), pygame.Rect(128,64,64,64),
@@ -417,22 +443,23 @@ class Skeleton_red(pygame.sprite.Sprite):
                 x = self.rect.centerx
                 y = self.rect.centery
                 distance = ((hero_center_pos[0]-x)**2 + (hero_center_pos[1]-y)**2)**0.5
-                if distance < 350 and distance > 20:
+                if distance < 350 and distance > 20 and self.count % 2 == 0:
                     if self.direction == 1:
                         self.state = 'run_left'
                     if self.direction == -1:
                         self.state = 'run_right'
                     if hero_center_pos[0] < x:
                         self.direction = 1
-                        self.rect.move_ip(-1,0)
+                        self.rect.move_ip(-1 * self.speed,0)
                     if hero_center_pos[0] > x:
                         self.direction = -1
-                        self.rect.move_ip(1,0)
+                        self.rect.move_ip(1 * self.speed,0)
                     if hero_center_pos[1] < y:
-                        self.rect.move_ip(0,-1)
+                        self.rect.move_ip(0,-1 * self.speed)
                     if hero_center_pos[1] > y:
-                        self.rect.move_ip(0,1)
-                if distance <= 30 and time.time() - self.last > self.cd:
+                        self.rect.move_ip(0,1 * self.speed)
+                self.count += 1
+                if distance <= 30 and distance >= 15 and time.time() - self.last > self.cd:
                     self.last = time.time()
                     if self.direction == 1:
                         self.state = 'attack_left'
@@ -484,16 +511,18 @@ class Warlock(pygame.sprite.Sprite):
         self.rect = self.image.get_rect(topleft=pos)
         self.fire = 0
         self.cast = 0
-    def update(self,hero_center_pos):
+    def update(self,hero_center_pos, game):
         new = time.time()
         if self.state =='hurt' and self.index != len(self.images[self.state]) - 1:
             self.state = 'hurt'
+            self.lock = 0
         else:
             if self.hp < 0:
                 self.state = 'death'
                 self.lock = 1
             if self.state == 'death' and self.index == 12:
                 self.kill()
+                game.score += 100
             x = self.rect.centerx
             y = self.rect.centery
             distance = ((hero_center_pos[0] - x) ** 2 + (hero_center_pos[1] - y) ** 2) ** 0.5
@@ -662,7 +691,7 @@ class GameManager():
     def __init__(self):
         self.score = 0
         self.fontobj = setup_fonts(24)
-
+        self.state = 'running'
     def draw(self, surface):
          text = self.fontobj.render("Score: "+str(self.score), True, (255, 255, 255))
          surface.blit(text,(16,80))

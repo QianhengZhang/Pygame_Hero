@@ -1,6 +1,6 @@
 import pygame
 import start_menu
-from model import  Hero, Tester, TextBox, Skeleton_red, GameManager, Warlock, Warlock_bullet
+from model import  Hero, Tester, TextBox, Skeleton_red, GameManager, Warlock, Warlock_bullet, Fire, Portal
 
 def main():
     pygame.init()
@@ -18,6 +18,7 @@ def main():
     test_group = pygame.sprite.Group()
     warlock_group = pygame.sprite.Group()
     bullet_group = pygame.sprite.Group()
+    fire_effect = pygame.sprite.Group()
     for i in range (0, 4):
         tester = Skeleton_red((400 + 50 * i, 400 + 25 * i))
         test_group.add(tester)
@@ -25,12 +26,14 @@ def main():
     pop = TextBox(surface)
     clock = pygame.time.Clock()
     state = 'running'
-    start_page = True
-    while start_page:
-        start_page = start_menu.start_menu()
-    pygame.mixer.music.fadeout(5000)
-    pygame.mixer.music.load("background.wav")
-    pygame.mixer.music.play(-1)
+    portal_group = pygame.sprite.GroupSingle()
+    portal_group.add(Portal((500, 500)))
+    #start_page = True
+    #while start_page:
+        #start_page = start_menu.start_menu()
+    #pygame.mixer.music.fadeout(5000)
+   # pygame.mixer.music.load("background.wav")
+  #  pygame.mixer.music.play(-1)
     while True:
         clock.tick(18)
 
@@ -43,7 +46,17 @@ def main():
             controls['pop'] = True
         if controls['pop']:
             state = pop.update(controls)
-        if state == 'pause':
+        if game.score >= 100:
+            portal_group.update()
+            if len(portal_group) > 0 and len(avatar_group) > 0:
+                teleport = pygame.sprite.spritecollide(portal_group.sprite, avatar_group, dokill=False, collided=pygame.sprite.collide_mask)
+                if len(teleport) > 0:
+                    portal_collision(teleport, portal_group.sprite)
+                    game.state = 'done'
+        if game.score >= 100 and len(portal_group) == 0:
+            state = 'pause'
+            pop.pop_up(['Stage 1 completed'])
+        if state == 'pause' and game.state == 'running':
             if len(avatar_group) == 0:
                 score = str(game.score)
                 pop.pop_up(['You are dead', 'Current Score is ' + score,'Press R to rejoin the fight!'])
@@ -54,9 +67,12 @@ def main():
             if controls['click']:
                 print(controls['click'])
                 warlock_group.add(Warlock(controls['click']))
+            elif game.score < 300 and len(test_group) < 4:
+                test_group.add(Skeleton_red((700, 400)))
             surface.blit(background, (0,0))
             avatar_group.update(controls)
             bullet_group.update()
+            fire_effect.update()
             if len(avatar_group) > 0 and len(test_group) > 0:
                 battle = pygame.sprite.spritecollide(avatar_group.sprite, test_group, dokill=False, collided=pygame.sprite.collide_mask)
                 avatar_group.sprite.update_collision(battle)
@@ -65,20 +81,32 @@ def main():
                 avatar_group.sprite.update_collision(battle)
                 for warlock_sprite in warlock_group.sprites():
                     if warlock_sprite.fire == 1:
-                        bullet_group.add(Warlock_bullet((warlock_sprite.rect.center[0], warlock_sprite.rect.center[1] - 30),-(warlock_sprite.direction)))
-            if len(avatar_group) > 0 and len(bullet_group) > 0:
-                battle = pygame.sprite.spritecollide(avatar_group.sprite, bullet_group, dokill=False, collided=pygame.sprite.collide_mask)
-                avatar_group.sprite.update_bullet_collision(battle)
+                        bullet_group.add(Warlock_bullet((warlock_sprite.rect.center[0] + 15 * warlock_sprite.direction, warlock_sprite.rect.center[1] - 30),-(warlock_sprite.direction)))
+                    if warlock_sprite.cast == 1:
+                        fire_effect.add(Fire(avatar_group.sprite.rect.move(15,0).topleft))
             if len(avatar_group) > 0:
+                if len(bullet_group) > 0:
+                    battle = pygame.sprite.spritecollide(avatar_group.sprite, bullet_group, dokill=False, collided=pygame.sprite.collide_mask)
+                    avatar_group.sprite.update_bullet_collision(battle)
+                if len(fire_effect) > 0:
+                    battle = pygame.sprite.spritecollide(avatar_group.sprite, fire_effect, dokill=False, collided=pygame.sprite.collide_mask)
+                    avatar_group.sprite.update_bullet_collision(battle)
                 test_group.update(avatar_group.sprite.rect.center, game)
                 warlock_group.update(avatar_group.sprite.rect.center, game)
                 draw_health_bar(avatar_group.sprite, surface)
             warlock_group.draw(surface)
             bullet_group.draw(surface)
+            fire_effect.draw(surface)
+            portal_group.draw(surface)
             avatar_group.draw(surface)
             test_group.draw(surface)
             game.draw(surface)
         pygame.display.flip()
+
+def portal_collision(teleport, portal):
+    for hero in teleport:
+        hero.kill()
+    portal.status = 'close'
 
 def draw_health_bar(hero, surface):
     font = setup_fonts(24)
