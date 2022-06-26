@@ -1,8 +1,13 @@
 import sys
+from black import diff
 import pygame
 from datetime import date
 import shelve # part of the standard library
 from pygame import mixer
+
+# Fix me after integration!
+global difficulty
+difficulty = 0
 
 pygame.init()
 clock = pygame.time.Clock()
@@ -39,6 +44,22 @@ def create_button(x, y, width, height, hovercolor, defaultcolor):
     else:
         pygame.draw.rect(screen, defaultcolor, (x, y, width, height))
 
+def create_difficulty_button(x, y, width, height, hovercolor, defaultcolor):
+    mouse = pygame.mouse.get_pos()
+    click = pygame.mouse.get_pressed(3)
+    global difficulty
+    if x + width > mouse[0] > x and y + height > mouse[1] > y:
+        pygame.draw.rect(screen, hovercolor, (x, y, width, height))
+        if click[0] == 1:
+            if difficulty == 0:
+                difficulty = 1
+            elif difficulty == 1:
+                difficulty = 2
+            else:
+                difficulty = 0
+            return True
+    else:
+        pygame.draw.rect(screen, defaultcolor, (x, y, width, height))
 
 # Start menu returns true until we click the Start button
 def start_menu():
@@ -55,6 +76,11 @@ def start_menu():
         # start button (left, top, width, height)
         start_button = create_button(screen_width - 130, 7, 125, 26, lightgrey, slategrey)
 
+        # difficulty button
+        difficulty_button = create_difficulty_button(screen_width - 260 , 7, 125, 26, lightgrey, slategrey)
+        difficulty_button_text = smallfont.render("Difficulty: " + str(difficulty), True, blackish)
+        screen.blit(difficulty_button_text, (screen_width - 260, 9))
+        
         if start_button:
            return False
 
