@@ -15,7 +15,11 @@ pygame.display.set_caption("The Medieval Knight Game!")
 background = pygame.image.load("Run.png")
 background = pygame.transform.scale(background, (1070, 720))
 
-def update_enemy(maze, enemies):
+# Probably need fixing after integration !!!
+# Difficulty
+difficulty = 1
+
+def update_enemy_random(maze, enemies):
     valid = False
     new_enemies = list()
     counter = 0
@@ -48,6 +52,38 @@ def update_enemy(maze, enemies):
         valid = False
     return new_enemies
 
+def update_enemy_AI(maze, enemies, avatar_x, avatar_y):
+    new_enemies = list()
+    avatar_cell = maze.cell_at(avatar_x, avatar_y)
+    for enemy in enemies:
+        current_enemy_cell = maze.cell_at(enemy[0], enemy[1])
+        markup = mazes.ShortestPathMarkup(maze, current_enemy_cell, avatar_cell)
+        if (current_enemy_cell.north != None and markup.marks[current_enemy_cell.north] == "*" and current_enemy_cell.is_linked(current_enemy_cell.north)):
+            new_enemies.append((enemy[0] - 1, enemy[1]))    
+        elif (current_enemy_cell.south != None and markup.marks[current_enemy_cell.south] == "*" and current_enemy_cell.is_linked(current_enemy_cell.south)):
+            new_enemies.append((enemy[0] + 1, enemy[1])) 
+        elif (current_enemy_cell.west != None and markup.marks[current_enemy_cell.west] == "*" and current_enemy_cell.is_linked(current_enemy_cell.west)):
+            new_enemies.append((enemy[0], enemy[1] - 1)) 
+        elif (current_enemy_cell.east != None and markup.marks[current_enemy_cell.east] == "*" and current_enemy_cell.is_linked(current_enemy_cell.east)):
+            new_enemies.append((enemy[0], enemy[1] + 1)) 
+    return new_enemies
+
+def update_enemy_cheat(maze, enemies, avatar_x, avatar_y):
+    new_enemies = list()
+    avatar_cell = maze.cell_at(avatar_x, avatar_y)
+    for enemy in enemies:
+        current_enemy_cell = maze.cell_at(enemy[0], enemy[1])
+        markup = mazes.ShortestPathMarkup(maze, current_enemy_cell, avatar_cell)
+        if (current_enemy_cell.north != None and markup.marks[current_enemy_cell.north] == "*"):
+            new_enemies.append((enemy[0] - 1, enemy[1]))    
+        elif (current_enemy_cell.south != None and markup.marks[current_enemy_cell.south] == "*"):
+            new_enemies.append((enemy[0] + 1, enemy[1])) 
+        elif (current_enemy_cell.west != None and markup.marks[current_enemy_cell.west] == "*"):
+            new_enemies.append((enemy[0], enemy[1] - 1)) 
+        elif (current_enemy_cell.east != None and markup.marks[current_enemy_cell.east] == "*"):
+            new_enemies.append((enemy[0], enemy[1] + 1)) 
+    return new_enemies
+
 
 if __name__ == "__main__":
     screen = pygame.display.set_mode([1034,778])
@@ -67,15 +103,35 @@ if __name__ == "__main__":
     # Create a bunch of enemies
     enemies = list()
     counter = 0
-    num_enemies = 8
+    num_enemies = 1
     while counter < num_enemies:
         (enemy_x, enemy_y) = (random.randrange(0, 24), random.randrange(0, 32))
         if not ((enemy_x == init_x and enemy_y == init_y) or ((enemy_x, enemy_y) in enemies)):
             enemies.append((enemy_x, enemy_y))
             counter += 1
 
-    update_enemy_countdown = 100
+    # Create portals.
+    deadends = maze.deadends()
+    portals = list()
+    for _ in range(2):
+        portal = list()
+        for _ in range(2):
+            index = random.randrange(0, len(deadends))
+            cell = deadends[index]
+            portal.append(cell)
+            deadends.remove(cell)
+        portals.append(portal)
 
+    # Portal positions
+    portals_pos = list()
+    for i in range(2):
+        portal_pos = list()
+        for j in range(2):
+            portal_pos.append((portals[i][j].row, portals[i][j].column))
+        portals_pos.append(portal_pos)
+
+    update_enemy_countdown = 100
+    just_teleported = False
     while running:
         update_enemy_countdown -= 1
         currentCell = maze.cell_at(avatar_x, avatar_y)
@@ -110,14 +166,38 @@ if __name__ == "__main__":
             # Implement me!!! Print "You win" for now
             print("You win!")
 
-        if (update_enemy_countdown == 0):
-            enemies = update_enemy(maze, enemies)
-            update_enemy_countdown = 100
-
         if ((avatar_x, avatar_y) in enemies):
             running = False
             print("You ran into enemies!! Try again.")
+
+        if ((avatar_x, avatar_y) in portals_pos[0]) and not just_teleported:
+            if (avatar_x, avatar_y) == portals_pos[0][0]:
+                (avatar_x, avatar_y) = portals_pos[0][1]
+            else:
+                (avatar_x, avatar_y) = portals_pos[0][0]
+            just_teleported = True
+
         
+        if ((avatar_x, avatar_y) in portals_pos[1]) and not just_teleported:
+            if (avatar_x, avatar_y) == portals_pos[1][0]:
+                (avatar_x, avatar_y) = portals_pos[1][1]
+            else:
+                (avatar_x, avatar_y) = portals_pos[1][0]
+            just_teleported = True
+        
+        if ((avatar_x, avatar_y) not in portals_pos[0] and (avatar_x, avatar_y) not in portals_pos[1]):
+            just_teleported = False
+
         screen.blit(background, (0, 0))
-        show_maze.display_grid(maze, markup, screen, avatar_x, avatar_y, destination_x, destination_y, enemies)
+        
+        if (update_enemy_countdown == 0):
+            if difficulty == 0:
+                enemies = update_enemy_random(maze, enemies)
+            elif difficulty == 1:
+                enemies = update_enemy_AI(maze, enemies, avatar_x, avatar_y)
+            elif difficulty == 2:
+                enemies = update_enemy_cheat(maze, enemies, avatar_x, avatar_y)
+            update_enemy_countdown = 100
+            
+        show_maze.display_grid(maze, markup, screen, avatar_x, avatar_y, destination_x, destination_y, enemies, portals)
         pygame.display.flip()

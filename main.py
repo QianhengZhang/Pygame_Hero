@@ -28,12 +28,14 @@ def main():
     state = 'running'
     portal_group = pygame.sprite.GroupSingle()
     portal_group.add(Portal((500, 500)))
-    #start_page = True
-    #while start_page:
-        #start_page = start_menu.start_menu()
-    #pygame.mixer.music.fadeout(5000)
-   # pygame.mixer.music.load("background.wav")
-  #  pygame.mixer.music.play(-1)
+    
+    start_page = True
+    while start_page:
+        start_page = start_menu.start_menu()
+    pygame.mixer.music.fadeout(5000)
+    pygame.mixer.music.load("background.wav")
+    pygame.mixer.music.play(-1)
+
     while True:
         clock.tick(18)
 

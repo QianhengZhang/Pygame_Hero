@@ -62,7 +62,7 @@ def start_menu():
         startbuttontext = smallfont.render("Start the Game!", True, blackish)
         screen.blit(startbuttontext, (screen_width - 125, 9))
 
-        # Displays the board room picture
+        # Displays the background picture
         screen.blit(background, (1, 40))
 
         for event in pygame.event.get():

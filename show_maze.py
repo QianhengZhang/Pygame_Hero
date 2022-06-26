@@ -5,6 +5,11 @@ import pygame.gfxdraw
 from pygame.locals import *
 import mazes
 
+portal1 = pygame.image.load("images.png")
+portal1 = pygame.transform.scale(portal1, (1034 / 32, 778 / 24))
+portal2 = pygame.image.load("portal.png")
+portal2 = pygame.transform.scale(portal2, (1034 / 32, 778 / 24))
+
 def show_maze():
     markup = None
     g = mazes.Grid(24,32)
@@ -12,7 +17,7 @@ def show_maze():
     return g, markup
         
 
-def display_grid(g, markup, screen, avatar_x, avatar_y, destination_x, destination_y, enemies):
+def display_grid(g, markup, screen, avatar_x, avatar_y, destination_x, destination_y, enemies, portals  ):
     for row in range(g.num_rows):
         for col in range(g.num_columns):
             c = g.cell_at(row, col)
@@ -37,6 +42,12 @@ def display_grid(g, markup, screen, avatar_x, avatar_y, destination_x, destinati
                                     (cell_x+15,cell_y+15),
                                     7,  #radius
                                     0)  #filled
+            if (row == portals[0][0].row and col == portals[0][0].column) or (row == portals[0][1].row and col == portals[0][1].column):
+                screen.blit(portal1, (cell_x, cell_y))
+
+            if (row == portals[1][0].row and col == portals[1][0].column) or (row == portals[1][1].row and col == portals[1][1].column):
+                screen.blit(portal2, (cell_x, cell_y))
+
             if not c.north or not c.is_linked(c.north):
                 pygame.gfxdraw.hline(screen, 
                                      cell_x, cell_x+31, cell_y, 
