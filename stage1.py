@@ -1,7 +1,8 @@
 import pygame
 import start_menu
-from model import  Hero, Tester, TextBox, Skeleton_red, GameManager, Warlock, Warlock_bullet, Fire, Portal
+from model import  Hero, Tester, TextBox, Skeleton_red, GameManager, Warlock, Warlock_bullet, Fire, Portal, Meteor
 import random
+import time
 
 def start_stage(game):
     pygame.init()
@@ -19,6 +20,10 @@ def start_stage(game):
     warlock_group = pygame.sprite.Group()
     bullet_group = pygame.sprite.Group()
     fire_effect = pygame.sprite.Group()
+    meteor_group = pygame.sprite.Group()
+    count = time.time()
+    meteor_ready = False
+    aimopen = False
     for i in range (0, 2):
         tester = Skeleton_red((400 + 50 * i, 400 + 25 * i))
         test_group.add(tester)
@@ -61,6 +66,9 @@ def start_stage(game):
         if controls['pop']:
             state = pop.update(controls)
             index = random.randint(0, len(suggestions)-1)
+        if controls['aimchange'] and meteor_ready:
+            aimopen = not aimopen
+
         if game.score >= score_requirement and len(test_group) == 0 and len(warlock_group) == 0:
             portal_group.update()
             if len(portal_group) > 0 and len(avatar_group) > 0:
@@ -111,6 +119,7 @@ def start_stage(game):
                 test_group.update(avatar_group.sprite.rect.center, game)
                 warlock_group.update(avatar_group.sprite.rect.center, game)
                 draw_health_bar(avatar_group.sprite, surface)
+                meteor_ready = draw_meteor_icon(count, surface)
             warlock_group.draw(surface)
             bullet_group.draw(surface)
             fire_effect.draw(surface)
@@ -118,6 +127,15 @@ def start_stage(game):
             avatar_group.draw(surface)
             test_group.draw(surface)
             game.draw(surface)
+            if aimopen:
+                pygame.draw.circle(surface,(255,0,0),pygame.mouse.get_pos(),20,5)
+            if controls['click'] and aimopen and meteor_ready:
+                count = time.time()
+                meteor = Meteor(controls['click'])
+                meteor_group.add(meteor)
+                aimopen = False
+            meteor_group.update()
+            meteor_group.draw(surface)
         pygame.display.flip()
 
 def portal_collision(teleport, portal):
@@ -125,23 +143,48 @@ def portal_collision(teleport, portal):
         hero.kill()
     portal.status = 'close'
 
+def draw_meteor_icon(count, surface):
+    now = time.time()
+    pygame.draw.circle(surface, (0,0,0), (50,50), 40)
+    image = pygame.Surface((64, 64))
+    if now - count >= 2 and now - count < 3.6:
+        pygame.draw.circle(surface, (255,255,255), (50,50), 6)
+    elif now - count >= 3.6 and now - count < 5.2:
+        pygame.draw.circle(surface, (255,255,255), (50,50), 12)
+    elif now - count >= 5.2 and now - count < 6.8:
+        pygame.draw.circle(surface, (255,255,255), (50,50), 18)
+    elif now - count >= 6.8 and now - count < 8.4:
+        pygame.draw.circle(surface, (255,255,255), (50,50), 24)
+    elif now - count >= 8.4 and now - count < 10:
+        pygame.draw.circle(surface, (255,255,255), (50,50), 30)
+    elif now - count >= 10:
+        pygame.draw.circle(surface, (255,255,255), (50,50), 36)
+    if now - count > 10:
+        image_surf = pygame.image.load('meteor.png').convert()
+        image.blit(image_surf, (0,0))
+        image.set_colorkey((0, 0, 0))
+        rect = image_surf.get_rect(center=(50,50))
+        surface.blit(image, rect)
+        return True
+    return False
+
 def draw_health_bar(hero, surface):
     font = setup_fonts(24)
     max_width = 240
     width = hero.hp/hero.maxHp * 240
     number = str(int(hero.hp)) + '/' + str(hero.maxHp)
     height = 30
-    text_pos = (20, 50)
+    text_pos = (750, 50)
     text_rect = hero.image.get_rect(topleft=text_pos)
-    number_pos = (65 + max_width, 50)
+    number_pos = (110 + max_width, 50)
     number_rect = hero.image.get_rect(topleft=number_pos)
-    text_surface = font.render('HP:', True, (255, 255, 255))
+    #text_surface = font.render('HP:', True, (255, 255, 255))
     number_surface = font.render(number, True, (255, 255, 255))
-    base_bar_rect = pygame.Rect(60, 53, max_width, height)
-    bar_rect = pygame.Rect(60, 53, width, height)
+    base_bar_rect = pygame.Rect(110, 53, max_width, height)
+    bar_rect = pygame.Rect(110, 53, width, height)
     base_color = (120, 120, 120)
     color = (255,0,0)
-    surface.blit(text_surface, text_rect)
+    #surface.blit(text_surface, text_rect)
     pygame.draw.rect(surface, base_color, base_bar_rect)
     pygame.draw.rect(surface, color, bar_rect)
     pygame.draw.rect(surface, (0,0,0), base_bar_rect, 2)
@@ -185,7 +228,8 @@ def check_events():
         'reborn': False,
         'click': None,
         'pop': False,
-        'close': False
+        'close': False,
+        'aimchange': False
     }
 
     for event in pygame.event.get():
@@ -203,6 +247,8 @@ def check_events():
                 controls['attack'] = True
             if event.key == pygame.K_r:
                 controls['reborn'] = True
+            if event.key == pygame.K_e:
+                controls['aimchange'] = True
             if event.key == pygame.K_p:
                 controls['pop'] = True
             if event.key == pygame.K_0:

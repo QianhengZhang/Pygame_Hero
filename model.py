@@ -207,7 +207,7 @@ class Fire(pygame.sprite.Sprite):
 
     def draw(self, surface):
         surface.blit(self.image, self.rect)
-        
+
 class Meteor(pygame.sprite.Sprite):
     def __init__(self, pos):
         pygame.sprite.Sprite.__init__(self)
@@ -230,7 +230,7 @@ class Meteor(pygame.sprite.Sprite):
 
     def draw(self, surface):
         surface.blit(self.image, self.rect)
-        
+
 class Portal(pygame.sprite.Sprite):
     def __init__(self,pos):
         pygame.sprite.Sprite.__init__(self)
@@ -546,7 +546,6 @@ class Warlock(pygame.sprite.Sprite):
             self.state = 'hurt'
             self.lock = 0
         else:
-            self.state = 'idle'
             if self.hp < 0:
                 self.state = 'death'
                 self.lock = 1
