@@ -207,7 +207,30 @@ class Fire(pygame.sprite.Sprite):
 
     def draw(self, surface):
         surface.blit(self.image, self.rect)
+        
+class Meteor(pygame.sprite.Sprite):
+    def __init__(self, pos):
+        pygame.sprite.Sprite.__init__(self)
+        self.index = 0
+        self.images = [pygame.image.load('assets/imgs/Sprites/Meteor/' + f'MeteorShower_{i}.png') for i in range(0, 16)]
+        image_surf = pygame.image.load('assets/imgs/Sprites/Meteor/MeteorShower_0.png').convert()
+        self.image = pygame.Surface((30, 60))
+        self.image.blit(image_surf, (0, 0))
+        self.image.set_colorkey((0, 0, 0))
+        self.mask = pygame.mask.from_surface(self.image)
+        self.rect = self.image.get_rect(center=pos)
+        self.countframe = 0
 
+    def update(self):
+        self.image = self.images[self.index]
+        self.index = (self.index+1)%16
+        self.countframe += 1
+        if self.countframe == 160:
+            self.kill()
+
+    def draw(self, surface):
+        surface.blit(self.image, self.rect)
+        
 class Portal(pygame.sprite.Sprite):
     def __init__(self,pos):
         pygame.sprite.Sprite.__init__(self)
