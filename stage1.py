@@ -1,15 +1,15 @@
 import pygame
 import start_menu
 from model import  Hero, Tester, TextBox, Skeleton_red, GameManager, Warlock, Warlock_bullet, Fire, Portal
+import random
 
-def main():
+def start_stage(game):
     pygame.init()
     window_size_x = 1080
     window_size_y = 720
     surface = pygame.display.set_mode([window_size_x,window_size_y])
-
+    suggestions = ['Using WASD to move!', 'J is attack and K is block!', 'Be careful with the magic attack!']
     pygame.display.set_caption('Game')
-    game = GameManager()
     background = pygame.image.load('assets/imgs/Battleground2.png').convert()
     background = pygame. transform. scale(background, (window_size_x, window_size_y))
     avatar_group = pygame.sprite.GroupSingle()
@@ -19,7 +19,7 @@ def main():
     warlock_group = pygame.sprite.Group()
     bullet_group = pygame.sprite.Group()
     fire_effect = pygame.sprite.Group()
-    for i in range (0, 4):
+    for i in range (0, 2):
         tester = Skeleton_red((400 + 50 * i, 400 + 25 * i))
         test_group.add(tester)
     warlock_group.add(Warlock((550, 600)))
@@ -28,19 +28,31 @@ def main():
     state = 'running'
     portal_group = pygame.sprite.GroupSingle()
     portal_group.add(Portal((500, 500)))
-    
-    start_page = True
-    while start_page:
-        start_page = start_menu.start_menu()
     pygame.mixer.music.fadeout(5000)
     pygame.mixer.music.load("background.wav")
     pygame.mixer.music.play(-1)
+    if game.difficulty == 0:
+        max_skeleton = 2
+        max_warlock = 1
+        score_requirement = 300
+    elif game.difficulty == 1:
+        max_skeleton = 3
+        max_warlock = 1
+        score_requirement = 400
+    else:
+        max_skeleton = 3
+        max_warlock = 2
+        score_requirement = 500
 
     while True:
         clock.tick(18)
 
         controls = check_events()
         if controls['quit']:
+            game.next = False
+            break
+        elif (game.score >= score_requirement and len(portal_group) == 0):
+            game.next = True
             break
         if controls['reborn'] and len(avatar_group) == 0:
             avatar_group.add(Hero((100, 400)))
@@ -48,29 +60,32 @@ def main():
             controls['pop'] = True
         if controls['pop']:
             state = pop.update(controls)
-        if game.score >= 100:
+            index = random.randint(0, len(suggestions)-1)
+        if game.score >= score_requirement and len(test_group) == 0 and len(warlock_group) == 0:
             portal_group.update()
             if len(portal_group) > 0 and len(avatar_group) > 0:
                 teleport = pygame.sprite.spritecollide(portal_group.sprite, avatar_group, dokill=False, collided=pygame.sprite.collide_mask)
                 if len(teleport) > 0:
                     portal_collision(teleport, portal_group.sprite)
                     game.state = 'done'
-        if game.score >= 100 and len(portal_group) == 0:
-            state = 'pause'
-            pop.pop_up(['Stage 1 completed'])
         if state == 'pause' and game.state == 'running':
             if len(avatar_group) == 0:
                 score = str(game.score)
                 pop.pop_up(['You are dead', 'Current Score is ' + score,'Press R to rejoin the fight!'])
-                game.score = 0
             else:
-                pop.pop_up(['Notes:', 'Press Q to quit', 'Press P to resume the game!'])
+                pop.pop_up(['Notes:', 'Press Q to quit', 'Press P to resume the game!', suggestions[index]])
         else:
             if controls['click']:
                 print(controls['click'])
-                warlock_group.add(Warlock(controls['click']))
-            elif game.score < 300 and len(test_group) < 4:
-                test_group.add(Skeleton_red((700, 400)))
+                #warlock_group.add(Warlock(controls['click']))
+            elif game.score < score_requirement and (len(test_group) < max_skeleton or len(warlock_group) < max_warlock):
+                position_x = random.randint(600, 800)
+                position_y = random.randint(350, 550)
+                chance = random.randint(1,100)
+                if chance > 0 and chance <= 70 and len(test_group) < max_skeleton:
+                    test_group.add(Skeleton_red((position_x, position_y)))
+                elif chance > 70 and chance <= 100 and len(warlock_group) < max_warlock:
+                    warlock_group.add(Warlock((position_x, position_y)))
             surface.blit(background, (0,0))
             avatar_group.update(controls)
             bullet_group.update()
@@ -231,4 +246,4 @@ def check_events():
 
 
 if __name__ == "__main__":
-    main()
+    start_stage()

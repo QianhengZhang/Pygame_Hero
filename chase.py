@@ -59,13 +59,13 @@ def update_enemy_AI(maze, enemies, avatar_x, avatar_y):
         current_enemy_cell = maze.cell_at(enemy[0], enemy[1])
         markup = mazes.ShortestPathMarkup(maze, current_enemy_cell, avatar_cell)
         if (current_enemy_cell.north != None and markup.marks[current_enemy_cell.north] == "*" and current_enemy_cell.is_linked(current_enemy_cell.north)):
-            new_enemies.append((enemy[0] - 1, enemy[1]))    
+            new_enemies.append((enemy[0] - 1, enemy[1]))
         elif (current_enemy_cell.south != None and markup.marks[current_enemy_cell.south] == "*" and current_enemy_cell.is_linked(current_enemy_cell.south)):
-            new_enemies.append((enemy[0] + 1, enemy[1])) 
+            new_enemies.append((enemy[0] + 1, enemy[1]))
         elif (current_enemy_cell.west != None and markup.marks[current_enemy_cell.west] == "*" and current_enemy_cell.is_linked(current_enemy_cell.west)):
-            new_enemies.append((enemy[0], enemy[1] - 1)) 
+            new_enemies.append((enemy[0], enemy[1] - 1))
         elif (current_enemy_cell.east != None and markup.marks[current_enemy_cell.east] == "*" and current_enemy_cell.is_linked(current_enemy_cell.east)):
-            new_enemies.append((enemy[0], enemy[1] + 1)) 
+            new_enemies.append((enemy[0], enemy[1] + 1))
     return new_enemies
 
 def update_enemy_cheat(maze, enemies, avatar_x, avatar_y):
@@ -75,22 +75,21 @@ def update_enemy_cheat(maze, enemies, avatar_x, avatar_y):
         current_enemy_cell = maze.cell_at(enemy[0], enemy[1])
         markup = mazes.ShortestPathMarkup(maze, current_enemy_cell, avatar_cell)
         if (current_enemy_cell.north != None and markup.marks[current_enemy_cell.north] == "*"):
-            new_enemies.append((enemy[0] - 1, enemy[1]))    
+            new_enemies.append((enemy[0] - 1, enemy[1]))
         elif (current_enemy_cell.south != None and markup.marks[current_enemy_cell.south] == "*"):
-            new_enemies.append((enemy[0] + 1, enemy[1])) 
+            new_enemies.append((enemy[0] + 1, enemy[1]))
         elif (current_enemy_cell.west != None and markup.marks[current_enemy_cell.west] == "*"):
-            new_enemies.append((enemy[0], enemy[1] - 1)) 
+            new_enemies.append((enemy[0], enemy[1] - 1))
         elif (current_enemy_cell.east != None and markup.marks[current_enemy_cell.east] == "*"):
-            new_enemies.append((enemy[0], enemy[1] + 1)) 
+            new_enemies.append((enemy[0], enemy[1] + 1))
     return new_enemies
 
-
-if __name__ == "__main__":
+def start_chase(game):
     screen = pygame.display.set_mode([1034,778])
     maze, markup = show_maze.show_maze()
     running = True
     pygame.init()
-
+    difficulty = game.difficulty
     # Initial position for the player
     (init_x, init_y) = (random.randrange(0, 24), random.randrange(0, 32))
     (avatar_x, avatar_y) = (init_x, init_y)
@@ -159,7 +158,7 @@ if __name__ == "__main__":
                     if currentCell.south != None:
                         if currentCell.is_linked(currentCell.south):
                             avatar_x += 1
-                            
+
         if (avatar_x == destination_x and avatar_y == destination_y):
             running = False
             # Connect with the next page.
@@ -177,19 +176,19 @@ if __name__ == "__main__":
                 (avatar_x, avatar_y) = portals_pos[0][0]
             just_teleported = True
 
-        
+
         if ((avatar_x, avatar_y) in portals_pos[1]) and not just_teleported:
             if (avatar_x, avatar_y) == portals_pos[1][0]:
                 (avatar_x, avatar_y) = portals_pos[1][1]
             else:
                 (avatar_x, avatar_y) = portals_pos[1][0]
             just_teleported = True
-        
+
         if ((avatar_x, avatar_y) not in portals_pos[0] and (avatar_x, avatar_y) not in portals_pos[1]):
             just_teleported = False
 
         screen.blit(background, (0, 0))
-        
+
         if (update_enemy_countdown == 0):
             if difficulty == 0:
                 enemies = update_enemy_random(maze, enemies)
@@ -198,6 +197,9 @@ if __name__ == "__main__":
             elif difficulty == 2:
                 enemies = update_enemy_cheat(maze, enemies, avatar_x, avatar_y)
             update_enemy_countdown = 100
-            
+
         show_maze.display_grid(maze, markup, screen, avatar_x, avatar_y, destination_x, destination_y, enemies, portals)
         pygame.display.flip()
+
+if __name__ == "__main__":
+    start_chase()

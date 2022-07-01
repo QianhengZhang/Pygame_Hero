@@ -1,5 +1,5 @@
 import sys
-from black import diff
+#from black import diff
 import pygame
 from datetime import date
 import shelve # part of the standard library
@@ -80,7 +80,7 @@ def start_menu():
         difficulty_button = create_difficulty_button(screen_width - 260 , 7, 125, 26, lightgrey, slategrey)
         difficulty_button_text = smallfont.render("Difficulty: " + str(difficulty), True, blackish)
         screen.blit(difficulty_button_text, (screen_width - 260, 9))
-        
+
         if start_button:
            return False
 
@@ -100,6 +100,8 @@ def start_menu():
         clock.tick(15)
         return True
 
+def get_difficulty(game):
+    game.difficulty = difficulty
 
 if __name__ == "__main__":
     while True:

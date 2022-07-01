@@ -38,6 +38,7 @@ class Hero(pygame.sprite.Sprite):
         }
 
         image_surf = pygame.image.load(HERO_ASSET + 'idle/HeroKnight_Idle_0.png').convert()
+        image_surf = pygame.transform.scale(image_surf, (150, 72))
         self.image = pygame.Surface((100,55))
         self.image.blit(image_surf, (0,0))
         self.image.set_colorkey((0,0,0))
@@ -76,6 +77,7 @@ class Hero(pygame.sprite.Sprite):
                 self.status = 'idle'
         self.index = (self.index + 1) % len(self.images[self.status])
         self.image = self.images[self.status][self.index]
+        self.image = pygame.transform.scale(self.image, (150, 72))
         self.mask = pygame.mask.from_surface(self.image)
         if self.direction == -1:
             self.image = pygame.transform.flip(self.image, True, False)
@@ -386,6 +388,7 @@ class Skeleton_red(pygame.sprite.Sprite):
         self.speed = random.randrange(1, 4)
         self.count = 2
         self.direction = 1
+        self.score = 40
         self.image_rects = {
             'idle_left' : [pygame.Rect(0,64,64,64), pygame.Rect(64,64,64,64), pygame.Rect(128,64,64,64),
                            pygame.Rect(192,64,64,64)],
@@ -438,7 +441,7 @@ class Skeleton_red(pygame.sprite.Sprite):
                 self.lock = 1
             if (self.state == 'death_left' or self.state == 'death_right') and self.index == 6:
                 self.kill()
-                game.score += 20
+                game.score += self.score
             if self.lock == 0:
                 x = self.rect.centerx
                 y = self.rect.centery
@@ -504,6 +507,7 @@ class Warlock(pygame.sprite.Sprite):
         }
 
         image_surf = pygame.image.load(Warlock_ASSET + 'idle/Warlock_Idle_0.png').convert()
+        image_surf = pygame.transform.scale(image_surf, (120, 96))
         self.image = pygame.Surface((100,80))
         self.image.blit(image_surf, (0,0))
         self.image.set_colorkey((0,0,0))
@@ -511,23 +515,26 @@ class Warlock(pygame.sprite.Sprite):
         self.rect = self.image.get_rect(topleft=pos)
         self.fire = 0
         self.cast = 0
+        self.score = 80
+
     def update(self,hero_center_pos, game):
         new = time.time()
         if self.state =='hurt' and self.index != len(self.images[self.state]) - 1:
             self.state = 'hurt'
             self.lock = 0
         else:
+            self.state = 'idle'
             if self.hp < 0:
                 self.state = 'death'
                 self.lock = 1
             if self.state == 'death' and self.index == 12:
                 self.kill()
-                game.score += 100
+                game.score += self.score
             x = self.rect.centerx
             y = self.rect.centery
             distance = ((hero_center_pos[0] - x) ** 2 + (hero_center_pos[1] - y) ** 2) ** 0.5
             if self.lock == 0:
-                if distance < 400 and distance > 150:
+                if distance < 400 and distance > 150 and self.state !='hurt':
                     self.state = 'run'
                     if hero_center_pos[0] < x:
                         self.direction = -1
@@ -539,13 +546,13 @@ class Warlock(pygame.sprite.Sprite):
                         self.rect.move_ip(0, -1)
                     if hero_center_pos[1] > y:
                         self.rect.move_ip(0, 1)
-                if distance >= 400 or (150 >= distance and distance >= 120):
+                if distance >= 400 or (150 >= distance and distance >= 120) and self.state !='hurt':
                     if hero_center_pos[0] < x:
                         self.direction = -1
                     if hero_center_pos[0] > x:
                         self.direction = 1
                     self.state = 'idle'
-                if distance < 120:
+                if distance < 120 and self.state !='hurt':
                     self.state = 'run'
                     if hero_center_pos[0] < x:
                         self.direction = 1
@@ -557,7 +564,7 @@ class Warlock(pygame.sprite.Sprite):
                         self.rect.move_ip(0, 1)
                     if hero_center_pos[1] > y:
                         self.rect.move_ip(0, -1)
-            if self.lock == 0 and (distance <= 150 ) and (new - self.last > self.coolDown):
+            if self.lock == 0 and (distance <= 150 ) and (new - self.last > self.coolDown) and self.state !='hurt':
                 self.state = 'spellcast'
                 if hero_center_pos[0] < x:
                     self.direction = -1
@@ -590,6 +597,7 @@ class Warlock(pygame.sprite.Sprite):
         self.index = (self.index + 1) % len(self.images[self.state])
         self.image = self.images[self.state][self.index]
         self.mask = pygame.mask.from_surface(self.image)
+        self.image = pygame.transform.scale(self.image, (120, 96))
         if self.direction == -1:
             self.image = pygame.transform.flip(self.image, True, False)
     def draw(self, surface):
@@ -686,12 +694,35 @@ class TextBox():
             self.status = 'close'
             return 'running'
 
+class Boss(pygame.sprite.Sprite):
+    def __init__(self, pos):
+        pygame.sprite.Sprite.__init__(self)
+        self.image_attack = pygame.image.load('demon-attack.png').convert()
+        self.image_attack2 = pygame.image.load('demon-attack-no-breath.png').convert()
+        self.image_idle = pygame.image.load('demon-idle.png').convert()
+
+        self.images = {
+            'idle': [pygame.Rect(0,144,160,144), pygame.Rect(160,144,160,144), pygame.Rect(320,144,160,144),
+                    pygame.Rect(480,144,160,144), pygame.Rect(640,144,160,144), pygame.Rect(800,144,160,144)],
+            'attack': [pygame.Rect(0,192,240,192), pygame.Rect(240,192,240,192), pygame.Rect(480,192,240,192),
+                    pygame.Rect(720,192,240,192), pygame.Rect(960,192,240,192), pygame.Rect(1200,192,240,192),
+                    pygame.Rect(1440,192,240,192), pygame.Rect(1680,192,240,192), pygame.Rect(1920,192,240,192),
+                    pygame.Rect(2160,192,240,192), pygame.Rect(2400,192,240,192)],
+            'attack2': [pygame.Rect(0,176,192,176), pygame.Rect(192,176,192,176), pygame.Rect(384,176,192,176),
+                    pygame.Rect(576,176,192,176), pygame.Rect(768,176,192,176), pygame.Rect(960,176,192,176),
+                    pygame.Rect(1152,176,192,176), pygame.Rect(1344,176,192,176)]
+        }
+
+
 class GameManager():
 
     def __init__(self):
         self.score = 0
+        self.difficulty = 0
         self.fontobj = setup_fonts(24)
         self.state = 'running'
+        self.next = True
+
     def draw(self, surface):
          text = self.fontobj.render("Score: "+str(self.score), True, (255, 255, 255))
          surface.blit(text,(16,80))
