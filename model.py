@@ -171,7 +171,238 @@ class Hero(pygame.sprite.Sprite):
 
     def draw(self, surface):
         surface.blit(self.image, self.rect)
+class Boss(pygame.sprite.Sprite):
+    def __init__(self, pos):
+        pygame.sprite.Sprite.__init__(self)
+        path = 'assets/imgs/Sprites/Boss/'
+        self.hp = 200
+        self.index = 0
+        self.image = pygame.Surface((160,144))
+        image_surf = pygame.image.load(path + '/idle/demon-idle_0.png').convert()
+        self.image.blit(image_surf,(0,0))
+        self.image.set_colorkey((0,0,0))
+        self.rect = self.image.get_rect(topleft=pos)
+        self.state = 'fly_attack'
+        self.images = {
+            'fly_idle': [pygame.image.load(path + f'idle/demon-idle_{i}.png') for i in range(0, 6)],
+            'fly_attack': [pygame.image.load(path + f'attack/demon-attack_{i}.png') for i in range(0, 8)],
+            'transform' : [pygame.image.load(path + f'ImpactExplosion/ImpactExplosion_{i}.png') for i in range(0, 7)],
+            'run_attack': [pygame.image.load(path + f'nightmare-run/nightmare-run_{i}.png') for i in range(0, 4)],
+            'run_idle': [pygame.image.load(path + f'nightmare-idle/nightmare-idle_{i}.png') for i in range(0, 4)]
+        }
+        self.mask = pygame.mask.from_surface(self.image)
+        self.rect = self.image.get_rect(topleft=pos)
+        self.modelock = 0
+        self.lock = 0
+        self.callminion = 0
+        self.breath = 0
+        self.mode = 0
+        self.framecount = 0
+        self.direction = -1
+        self.run_mode_step1 = 0
+        self.run_mode_step2 = 0
+        self.run_mode_step3 = 0
+        self.run_mode_step4 = 0
+        self.run_mode_step5 = 0
+        self.run_mode_step6 = 0
+        self.run_mode_step7 = 0
+        self.run_mode_step3_direction = 1
+        self.run_mode_step4_direction = 1
+        self.run_mode_step5_direction = 1
+    def update(self,hero_pos):
+        if self.hp <= 0:
+            self.kill()
+        xdistance = self.rect.centerx - hero_pos[0]
+        if self.modelock == 0:
+            choice = random.randint(0,1)
+            if choice == 0:
+                self.mode = (self.mode+1)%3
+            if choice == 1:
+                self.mode = (self.mode-1)%3
+            self.modelock = 1
+            print("mode ", end= '')
+            print(self.mode)
+            if self.mode == 1:
+                self.run_mode_step1 = 0
+                self.run_mode_step2 = 0
+                self.run_mode_step3 = 0
+                self.run_mode_step4 = 0
+                self.run_mode_step5 = 0
+                self.run_mode_step6 = 0
+                self.run_mode_step7 = 0
+        if self.modelock == 1:
+            if self.mode == 0: #breath mode
+                if self.rect.y > 150:
+                    self.state = 'fly_idle'
+                    self.rect.move_ip(0, -3)
+                    if xdistance >= 0:
+                        self.direction = 1
+                    else:
+                        self.direction = -1
+                    if xdistance > 200:
+                        self.rect.move_ip(-3,0)
+                    if xdistance < -200:
+                        self.rect.move_ip(3,0)
+                if self.rect.y <= 150:
+                    self.state = 'fly_attack'
+                    if self.lock == 0:
+                        if self.framecount == 151:
+                            self.modelock = 0
+                        else:
+                            self.framecount = 0
+                            self.lock = 1
+                    if self.lock == 1:
+                        if self.framecount == 49:
+                            self.breath = 0
+                        if self.framecount == 48:
+                            self.breath = 1
+                        if self.framecount < 100 and self.framecount > 49:
+                            self.index = 5
+                        if self.framecount >= 100 and self.framecount < 150:
+                            xdistance = self.rect.centerx - hero_pos[0]
+                            if xdistance >= 0:
+                                self.direction = 1
+                            else:
+                                self.direction = -1
+                            self.state = 'fly_idle'
+                        if self.framecount == 150:
+                            self.lock = 0
+            if self.mode == 1: #run mode
+                if self.run_mode_step1 == 0:
+                    if self.rect.y >= 350 and (self.rect.centerx >= 650 or self.rect.centerx <= 150):
+                        self.run_mode_step1 = 1
+                        self.framecount = 0
+                        self.index = 0
+                    else:
+                        self.state = 'fly_idle'
+                        if self.rect.centerx > 400:
+                            self.direction = -1
+                        else:
+                            self.direction = 1
+                        if self.rect.centerx > 400 and self.rect.centerx < 650:
+                            self.rect.move_ip(5,0)
+                        if self.rect.centerx <= 400 and self.rect.centerx > 150:
+                            self.rect.move_ip(-5,0)
+                        if self.rect.y < 350:
+                            self.rect.move_ip(0,3)
+                if self.run_mode_step1 == 1 and self.run_mode_step2 == 0:
+                    self.state = 'transform'
+                    if self.framecount == 6:
+                        self.run_mode_step2 = 1
+                        self.index = 0
+                        self.run_mode_step3_direction = self.direction *(-1)
+                if self.run_mode_step2 == 1 and self.run_mode_step3 == 0:
+                    self.state = 'run_attack'
+                    self.direction = self.run_mode_step3_direction
+                    if (self.direction == 1 and self.rect.centerx < 150) or (self.direction == -1 and self.rect.centerx >650):
+                        self.run_mode_step3 = 1
+                        self.index = 0
+                        self.run_mode_step4_direction = -self.direction
+                    else:
+                        if self.direction == 1:
+                            self.rect.move_ip(-10,0)
+                        else:
+                            self.rect.move_ip(10,0)
+                if self.run_mode_step3 == 1 and self.run_mode_step4 == 0:
+                    self.direction = self.run_mode_step4_direction
+                    if (self.direction == 1 and self.rect.centerx < 150) or (
+                            self.direction == -1 and self.rect.centerx > 650):
+                        self.run_mode_step4 = 1
+                        self.index = 0
+                        self.run_mode_step5_direction = -self.direction
+                    else:
+                        if self.direction == 1:
+                            self.rect.move_ip(-10, 0)
+                        else:
+                            self.rect.move_ip(10, 0)
+                if self.run_mode_step4 == 1 and self.run_mode_step5 == 0:
+                    self.direction = self.run_mode_step5_direction
+                    if (self.direction == 1 and self.rect.centerx < 150) or (
+                            self.direction == -1 and self.rect.centerx > 650) or (random.randint(0,15) == 0):
+                        self.run_mode_step5 = 1
+                        self.index = 0
+                        self.framecount = 0
+                    else:
+                        if self.direction == 1:
+                            self.rect.move_ip(-10, 0)
+                        else:
+                            self.rect.move_ip(10, 0)
+                if self.run_mode_step5 == 1 and self.run_mode_step6 == 0:
+                    self.state = 'run_idle' #only in this step player can attack boss
+                    if self.framecount == 100:
+                        self.run_mode_step6 = 1
+                        self.framecount = 0
+                        self.index = 0
+                if self.run_mode_step6 == 1 and self.run_mode_step7 == 0:
+                    self.state = 'transform'
+                    if self.framecount == 6:
+                        self.run_mode_step7 = 1
+                        self.index = 0
+                if self.run_mode_step7 == 1:
+                    self.modelock = 0
+            if self.mode == 2: #call minions mode
+                self.state = 'fly_idle'
+                if self.rect.y > 150:
+                    self.rect.move_ip(0, -3)
+                if self.rect.y >= 150:
+                    if self.lock == 0:
+                        if self.framecount == 301:
+                            self.modelock = 0
+                        else:
+                            self.framecount = 0
+                            self.lock = 1
+                    if self.lock == 1:
+                        if xdistance >= 0:
+                            self.direction = 1
+                        else:
+                            self.direction = -1
+                        if self.framecount == 30:
+                            self.callminion = 1
+                        if self.framecount == 31:
+                            self.callminion = 0
+                        if self.framecount == 300:
+                            self.lock = 0
+        self.framecount+= 1
+        self.index = (self.index + 1) % (len(self.images[self.state]))
+        self.image = self.images[self.state][self.index]
+        self.mask = pygame.mask.from_surface(self.image)
 
+        if self.direction == -1:
+            self.image = pygame.transform.flip(self.image, True, False)
+
+
+    def draw(self, surface):
+        surface.blit(self.image, self.rect)
+        
+class Breath(pygame.sprite.Sprite):
+    def __init__(self,pos,direction):
+        pygame.sprite.Sprite.__init__(self)
+        self.index = 0
+        self.images = [pygame.image.load('assets/imgs/Sprites/Boss/breath/' +f'breath_{i}.png') for i in range(0, 5)]
+        image_surf = pygame.image.load('assets/imgs/Sprites/Boss/breath/' +f'breath_0.png').convert()
+        self.image = pygame.Surface((500, 350))
+        self.image.blit(image_surf, (0, 0))
+        self.image.set_colorkey((0, 0, 0))
+        self.mask = pygame.mask.from_surface(self.image)
+        if direction == 1:
+            self.direction = 1
+            self.rect = self.image.get_rect(topleft = (pos[0]-350, pos[1]-85))
+        if direction == -1:
+            self.direction = -1
+            self.rect = self.image.get_rect(topleft = (pos[0]+40, pos[1]-85))
+        self.framecount = 0
+    def update(self):
+        if self.framecount == 50:
+            self.kill()
+        self.framecount += 1
+        self.image = self.images[self.index]
+        self.image = pygame.transform.scale(self.image,(500,350))
+        self.index = (self.index+1) % 5
+        if self.direction == -1:
+            self.image = pygame.transform.flip(self.image, True, False)
+    def draw(self, surface):
+        surface.blit(self.image, self.rect)
+        
 class Fire(pygame.sprite.Sprite):
     def __init__(self,pos):
         pygame.sprite.Sprite.__init__(self)
