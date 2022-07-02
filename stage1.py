@@ -1,6 +1,6 @@
 import pygame
 import start_menu
-from model import  Hero, Tester, TextBox, Skeleton_red, GameManager, Warlock, Warlock_bullet, Fire, Portal, Meteor
+from model import  Hero, Tester, TextBox, Skeleton_red, GameManager, Warlock, Warlock_bullet, Fire, Portal, Meteor, Boss
 import random
 import time
 
@@ -31,6 +31,8 @@ def start_stage(game):
     pop = TextBox(surface)
     clock = pygame.time.Clock()
     state = 'running'
+    demon_group = pygame.sprite.GroupSingle()
+    demon_group.add(Boss((500, 200)))
     portal_group = pygame.sprite.GroupSingle()
     portal_group.add(Portal((500, 500)))
     pygame.mixer.music.fadeout(5000)
@@ -98,6 +100,7 @@ def start_stage(game):
             avatar_group.update(controls)
             bullet_group.update()
             fire_effect.update()
+            demon_group.update()
             if len(avatar_group) > 0 and len(test_group) > 0:
                 battle = pygame.sprite.spritecollide(avatar_group.sprite, test_group, dokill=False, collided=pygame.sprite.collide_mask)
                 avatar_group.sprite.update_collision(battle)
@@ -136,6 +139,8 @@ def start_stage(game):
                 aimopen = False
             meteor_group.update()
             meteor_group.draw(surface)
+            demon_group.draw(surface)
+
         pygame.display.flip()
 
 def portal_collision(teleport, portal):

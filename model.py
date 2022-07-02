@@ -717,24 +717,36 @@ class TextBox():
             return 'running'
 
 class Boss(pygame.sprite.Sprite):
+
+
+
     def __init__(self, pos):
         pygame.sprite.Sprite.__init__(self)
-        self.image_attack = pygame.image.load('demon-attack.png').convert()
-        self.image_attack2 = pygame.image.load('demon-attack-no-breath.png').convert()
-        self.image_idle = pygame.image.load('demon-idle.png').convert()
-
+        path = 'assets/imgs/Sprites/Boss/'
+        self.index = 0
+        self.image = pygame.Surface((160,144))
+        image_surf = pygame.image.load(path + '/idle/demon-idle_0.png').convert()
+        self.image.blit(image_surf,(0,0))
+        self.image.set_colorkey((0,0,0))
+        self.rect = self.image.get_rect(topleft=pos)
+        self.state = 'idle'
         self.images = {
-            'idle': [pygame.Rect(0,144,160,144), pygame.Rect(160,144,160,144), pygame.Rect(320,144,160,144),
-                    pygame.Rect(480,144,160,144), pygame.Rect(640,144,160,144), pygame.Rect(800,144,160,144)],
-            'attack': [pygame.Rect(0,192,240,192), pygame.Rect(240,192,240,192), pygame.Rect(480,192,240,192),
-                    pygame.Rect(720,192,240,192), pygame.Rect(960,192,240,192), pygame.Rect(1200,192,240,192),
-                    pygame.Rect(1440,192,240,192), pygame.Rect(1680,192,240,192), pygame.Rect(1920,192,240,192),
-                    pygame.Rect(2160,192,240,192), pygame.Rect(2400,192,240,192)],
-            'attack2': [pygame.Rect(0,176,192,176), pygame.Rect(192,176,192,176), pygame.Rect(384,176,192,176),
-                    pygame.Rect(576,176,192,176), pygame.Rect(768,176,192,176), pygame.Rect(960,176,192,176),
-                    pygame.Rect(1152,176,192,176), pygame.Rect(1344,176,192,176)]
+            'idle': [pygame.image.load(path + f'idle/demon-idle_{i+1}.png') for i in range(0, 5)],
+            'attack': [pygame.image.load(path + f'attack/demon-attack_{i+1}.png') for i in range(0, 7)],
+            'nightmare-run': [pygame.image.load(path + f'nightmare-run/nightmare-run_{i+1}.png') for i in range(0, 3)],
+            'nightmare-idle': [pygame.image.load(path + f'nightmare-idle/nightmare-idle_{i+1}.png') for i in range(0, 3)],
         }
+        self.mask = pygame.mask.from_surface(self.image)
+        self.rect = self.image.get_rect(topleft=pos)
 
+    def update(self):
+        print(self.rect)
+        self.index = (self.index + 1) % (len(self.images[self.state]))
+        self.image = self.images[self.state][self.index]
+        self.mask = pygame.mask.from_surface(self.image)
+
+    def draw(self, surface):
+        surface.blit(self.image, self.rect)
 
 class GameManager():
 
