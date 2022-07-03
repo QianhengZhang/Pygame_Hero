@@ -12,7 +12,6 @@ def main():
 		start_page = start_menu.start_menu()
 		start_menu.get_difficulty(game)
 	stage = True
-	print(game.difficulty)
 	while stage:
 		stage = stage1.start_stage(game)
 		chase_stage = game.next

@@ -90,6 +90,7 @@ def start_chase(game):
     running = True
     pygame.init()
     difficulty = game.difficulty
+    
     # Initial position for the player
     (init_x, init_y) = (random.randrange(0, 24), random.randrange(0, 32))
     (avatar_x, avatar_y) = (init_x, init_y)

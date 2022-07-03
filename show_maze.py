@@ -4,6 +4,7 @@ import pygame
 import pygame.gfxdraw
 from pygame.locals import *
 import mazes
+from model import Skeleton_blue
 
 portal1 = pygame.image.load("images.png")
 portal1 = pygame.transform.scale(portal1, (1034 / 32, 778 / 24))
@@ -16,6 +17,11 @@ def show_maze():
     mazes.aldous_broder(g)
     return g, markup
 
+avatar = pygame.image.load('./assets/imgs/Sprites/HeroKnight/Idle/HeroKnight_Idle_0.png')
+avatar = pygame.transform.scale(avatar, (1034 / 32, 778 / 24))
+
+enemy = pygame.image.load("enemy.png")
+enemy = pygame.transform.scale(enemy, (1034 / 32, 778 / 24))
 
 def display_grid(g, markup, screen, avatar_x, avatar_y, destination_x, destination_y, enemies, portals):
     for row in range(g.num_rows):
@@ -24,17 +30,10 @@ def display_grid(g, markup, screen, avatar_x, avatar_y, destination_x, destinati
             cell_x = col * 32 + 5
             cell_y = row * 32 + 5
             if (row, col) in enemies:
-                pygame.draw.circle(screen,
-                                    (255, 0, 0),
-                                    (cell_x+15,cell_y+15),
-                                    7,  #radius
-                                    0)  #filled
+                screen.blit(enemy, (cell_x, cell_y))
             if row == avatar_x and col == avatar_y:
-                pygame.draw.circle(screen,
-                                    (0, 0, 255),
-                                    (cell_x+15,cell_y+15),
-                                    7,  #radius
-                                    0)  #filled
+                screen.blit(avatar, (cell_x,cell_y))
+
             if row == destination_x and col == destination_y:
                 pygame.draw.circle(screen,
                                     (0, 255, 0),
@@ -63,4 +62,3 @@ def display_grid(g, markup, screen, avatar_x, avatar_y, destination_x, destinati
                 pygame.gfxdraw.vline(screen,
                                      cell_x, cell_y, cell_y+31,
                                      (100,100,100))
-            
