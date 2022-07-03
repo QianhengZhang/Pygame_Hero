@@ -7,13 +7,13 @@ import random
 
 pygame.init()
 clock = pygame.time.Clock()
-screen_width = 1070
-screen_height = 720
+screen_width = 1034
+screen_height = 778
 screen = pygame.display.set_mode((screen_width, screen_height))
 pygame.display.set_caption("The Medieval Knight Game!")
 
 background = pygame.image.load("Run.png")
-background = pygame.transform.scale(background, (1070, 720))
+background = pygame.transform.scale(background, (1034, 778))
 
 # Probably need fixing after integration !!!
 # Difficulty
@@ -200,6 +200,3 @@ def start_chase(game):
 
         show_maze.display_grid(maze, markup, screen, avatar_x, avatar_y, destination_x, destination_y, enemies, portals)
         pygame.display.flip()
-
-if __name__ == "__main__":
-    start_chase()
