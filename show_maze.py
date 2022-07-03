@@ -20,7 +20,6 @@ def show_maze():
 def display_grid(g, markup, screen, avatar_x, avatar_y, destination_x, destination_y, enemies, portals):
     for row in range(g.num_rows):
         for col in range(g.num_columns):
-            counter = 0
             c = g.cell_at(row, col)
             cell_x = col * 32 + 5
             cell_y = row * 32 + 5
@@ -31,7 +30,6 @@ def display_grid(g, markup, screen, avatar_x, avatar_y, destination_x, destinati
                                     7,  #radius
                                     0)  #filled
             if row == avatar_x and col == avatar_y:
-                counter += 1
                 pygame.draw.circle(screen,
                                     (0, 0, 255),
                                     (cell_x+15,cell_y+15),
@@ -65,4 +63,4 @@ def display_grid(g, markup, screen, avatar_x, avatar_y, destination_x, destinati
                 pygame.gfxdraw.vline(screen,
                                      cell_x, cell_y, cell_y+31,
                                      (100,100,100))
-            print(counter)
+            
