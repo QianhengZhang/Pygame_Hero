@@ -84,12 +84,12 @@ def update_enemy_cheat(maze, enemies, avatar_x, avatar_y):
             new_enemies.append((enemy[0], enemy[1] + 1))
     return new_enemies
 
-def start_chase():
+def start_chase(game):
     screen = pygame.display.set_mode([1034,778])
     maze, markup = show_maze.show_maze()
     running = True
     pygame.init()
-    #difficulty = game.difficulty
+    difficulty = game.difficulty
     # Initial position for the player
     (init_x, init_y) = (random.randrange(0, 24), random.randrange(0, 32))
     (avatar_x, avatar_y) = (init_x, init_y)
