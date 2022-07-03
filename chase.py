@@ -12,7 +12,7 @@ screen_height = 778
 screen = pygame.display.set_mode((screen_width, screen_height))
 pygame.display.set_caption("The Medieval Knight Game!")
 
-background = pygame.image.load("Run.png")
+background = pygame.image.load("Escape-room.jpg")
 background = pygame.transform.scale(background, (1034, 778))
 
 # Probably need fixing after integration !!!
@@ -84,12 +84,12 @@ def update_enemy_cheat(maze, enemies, avatar_x, avatar_y):
             new_enemies.append((enemy[0], enemy[1] + 1))
     return new_enemies
 
-def start_chase(game):
+def start_chase():
     screen = pygame.display.set_mode([1034,778])
     maze, markup = show_maze.show_maze()
     running = True
     pygame.init()
-    difficulty = game.difficulty
+    #difficulty = game.difficulty
     # Initial position for the player
     (init_x, init_y) = (random.randrange(0, 24), random.randrange(0, 32))
     (avatar_x, avatar_y) = (init_x, init_y)
@@ -200,3 +200,6 @@ def start_chase(game):
 
         show_maze.display_grid(maze, markup, screen, avatar_x, avatar_y, destination_x, destination_y, enemies, portals)
         pygame.display.flip()
+
+if __name__ == "__main__":
+    start_chase()
