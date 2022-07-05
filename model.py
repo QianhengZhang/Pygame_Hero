@@ -771,82 +771,78 @@ class Warlock(pygame.sprite.Sprite):
         self.cast = 0
         self.score = 80
 
-    def update(self,hero_center_pos, game):
+    def update(self,hero_center_pos,game):
         new = time.time()
-        if self.state =='hurt' and self.index != len(self.images[self.state]) - 1:
-            self.state = 'hurt'
-            self.lock = 0
-        else:
-            if self.hp < 0:
-                self.state = 'death'
-                self.lock = 1
+        if self.lock == 1:
             if self.state == 'death' and self.index == 12:
                 self.kill()
                 game.score += self.score
-            x = self.rect.centerx
-            y = self.rect.centery
-            distance = ((hero_center_pos[0] - x) ** 2 + (hero_center_pos[1] - y) ** 2) ** 0.5
-            if self.lock == 0:
-                if distance < 400 and distance > 150 and self.state !='hurt':
-                    self.state = 'run'
-                    if hero_center_pos[0] < x:
-                        self.direction = -1
-                        self.rect.move_ip(-1, 0)
-                    if hero_center_pos[0] > x:
-                        self.direction = 1
-                        self.rect.move_ip(1, 0)
-                    if hero_center_pos[1] < y:
-                        self.rect.move_ip(0, -1)
-                    if hero_center_pos[1] > y:
-                        self.rect.move_ip(0, 1)
-                if distance >= 400 or (150 >= distance and distance >= 120) and self.state !='hurt':
-                    if hero_center_pos[0] < x:
-                        self.direction = -1
-                    if hero_center_pos[0] > x:
-                        self.direction = 1
-                    self.state = 'idle'
-                if distance < 120 and self.state !='hurt':
-                    self.state = 'run'
-                    if hero_center_pos[0] < x:
-                        self.direction = 1
-                        self.rect.move_ip(1, 0)
-                    if hero_center_pos[0] > x:
-                        self.direction = -1
-                        self.rect.move_ip(-1, 0)
-                    if hero_center_pos[1] < y:
-                        self.rect.move_ip(0, 1)
-                    if hero_center_pos[1] > y:
-                        self.rect.move_ip(0, -1)
-            if self.lock == 0 and (distance <= 150 ) and (new - self.last > self.coolDown) and self.state !='hurt':
-                self.state = 'spellcast'
-                if hero_center_pos[0] < x:
-                    self.direction = -1
-                if hero_center_pos[0] > x:
-                    self.direction = 1
-                self.lock = 1
-                self.cast = 1
+            if self.state == 'hurt' and self.index == 3:
+                self.lock = 0
                 self.index = 0
-                self.last = time.time()
-            if self.cast == 1 and self.index == 1:
+                self.state = 'idle'
+            if self.state == 'spellcast' and self.index == 13:
+                self.lock = 0
+                self.index = 0
+                self.state = 'idle'
+            if self.state == 'spellcast' and self.index == 1:
                 self.cast = 0
-            if self.state == 'spellcast' and self.lock == 1 and self.index == 13:
-                self.state = 'idle'
+            if self.state == 'attack' and self.index == 12:
                 self.lock = 0
-            if self.lock == 0 and (self.rect.centery > hero_center_pos[1] - 30 and self.rect.centery < hero_center_pos[1] + 30) and (new - self.last > self.coolDown):
-                self.state = 'attack'
+                self.index = 0
+                self.state = 'idle'
+            if self.state == 'attack' and self.index == 1:
+                self.fire = 0
+        if self.lock == 0:
+            if self.hp < 0:
+                self.state = 'death'
+                self.index = 0
+                self.lock = 1
+            if self.state not in ['death','hurt']:
+                x = self.rect.centerx
+                y = self.rect.centery
+                distance = ((hero_center_pos[0] - x) ** 2 + (hero_center_pos[1] - y) ** 2) ** 0.5
                 if hero_center_pos[0] < x:
                     self.direction = -1
-                if hero_center_pos[0] > x:
+                else:
                     self.direction = 1
-                self.lock = 1
-                self.fire = 1
-                self.index = 0
-                self.last = time.time()
-            if self.fire == 1 and self.index == 1:
-                self.fire = 0
-            if self.state == 'attack' and self.lock == 1 and self.index == 12:
-                self.state = 'idle'
-                self.lock = 0
+                if (distance <= 150 ) and (new - self.last > self.coolDown):
+                    self.state = 'spellcast'
+                    self.lock = 1
+                    self.cast = 1
+                    self.index = 0
+                    self.last = time.time()
+                if self.state != 'spellcast' and (self.rect.centery > hero_center_pos[1] - 30 and self.rect.centery < hero_center_pos[1] + 30) and (new - self.last > self.coolDown):
+                    self.state = 'attack'
+                    self.lock = 1
+                    self.fire = 1
+                    self.index = 0
+                    self.last = time.time()
+                if self.state not in ['spellcast','attack']:
+                    if distance < 400 and distance > 150:
+                        self.state = 'run'
+                        if hero_center_pos[0] < x:
+                            self.rect.move_ip(-1, 0)
+                        if hero_center_pos[0] > x:
+                            self.rect.move_ip(1, 0)
+                        if hero_center_pos[1] < y:
+                            self.rect.move_ip(0, -1)
+                        if hero_center_pos[1] > y:
+                            self.rect.move_ip(0, 1)
+                    if distance >= 400 or (150 >= distance and distance >= 120):
+                        self.state = 'idle'
+                    if distance < 120 and self.state != 'hurt':
+                        self.state = 'run'
+                        if hero_center_pos[0] < x:
+                            self.direction = 1
+                            self.rect.move_ip(1, 0)
+                        if hero_center_pos[0] > x:
+                            self.direction = -1
+                            self.rect.move_ip(-1, 0)
+                        if hero_center_pos[1] < y:
+                            self.rect.move_ip(0, 1)
+                        if hero_center_pos[1] > y:
+                            self.rect.move_ip(0, -1)
         self.index = (self.index + 1) % len(self.images[self.state])
         self.image = self.images[self.state][self.index]
         self.mask = pygame.mask.from_surface(self.image)
@@ -855,7 +851,6 @@ class Warlock(pygame.sprite.Sprite):
             self.image = pygame.transform.flip(self.image, True, False)
     def draw(self, surface):
         surface.blit(self.image, self.rect)
-
 
 class Warlock_bullet(pygame.sprite.Sprite):
     def __init__(self,pos,direction):
