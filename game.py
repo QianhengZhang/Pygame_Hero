@@ -7,7 +7,7 @@ from model import GameManager
 def main():
 	game = GameManager()
 
-	start_page = True
+	start_page = False
 	while start_page:
 		start_page = start_menu.start_menu()
 		start_menu.get_difficulty(game)

@@ -1,13 +1,13 @@
 import pygame
 import start_menu
-from model import  Hero, Tester, TextBox, Skeleton_red, GameManager, Warlock, Warlock_bullet, Fire, Portal, Meteor, Boss
+from model import  Hero, Tester, TextBox, Skeleton_red, GameManager, Warlock, Warlock_bullet, Fire, Portal, Meteor, Boss_icon
 import random
 import time
 
 def start_stage(game):
     pygame.init()
-    window_size_x = 1080
-    window_size_y = 720
+    window_size_x = 1034
+    window_size_y = 778
     surface = pygame.display.set_mode([window_size_x,window_size_y])
     suggestions = ['Using WASD to move!', 'J is attack and K is block!', 'Be careful with the magic attack!']
     pygame.display.set_caption('Game')
@@ -16,7 +16,7 @@ def start_stage(game):
     avatar_group = pygame.sprite.GroupSingle()
     avatar = Hero((100, 500))
     avatar_group.add(avatar)
-    test_group = pygame.sprite.Group()
+    skeleton_group = pygame.sprite.Group()
     warlock_group = pygame.sprite.Group()
     bullet_group = pygame.sprite.Group()
     fire_effect = pygame.sprite.Group()
@@ -26,13 +26,13 @@ def start_stage(game):
     aimopen = False
     for i in range (0, 2):
         tester = Skeleton_red((400 + 50 * i, 400 + 25 * i))
-        test_group.add(tester)
+        skeleton_group.add(tester)
     warlock_group.add(Warlock((550, 600)))
     pop = TextBox(surface)
     clock = pygame.time.Clock()
     state = 'running'
     demon_group = pygame.sprite.GroupSingle()
-    demon_group.add(Boss((500, 200)))
+    demon_group.add(Boss_icon((500, 200)))
     portal_group = pygame.sprite.GroupSingle()
     portal_group.add(Portal((500, 500)))
     pygame.mixer.music.fadeout(5000)
@@ -71,7 +71,7 @@ def start_stage(game):
         if controls['aimchange'] and meteor_ready:
             aimopen = not aimopen
 
-        if game.score >= score_requirement and len(test_group) == 0 and len(warlock_group) == 0:
+        if game.score >= score_requirement and len(skeleton_group) == 0 and len(warlock_group) == 0:
             portal_group.update()
             if len(portal_group) > 0 and len(avatar_group) > 0:
                 teleport = pygame.sprite.spritecollide(portal_group.sprite, avatar_group, dokill=False, collided=pygame.sprite.collide_mask)
@@ -88,12 +88,12 @@ def start_stage(game):
             if controls['click']:
                 print(controls['click'])
                 #warlock_group.add(Warlock(controls['click']))
-            elif game.score < score_requirement and (len(test_group) < max_skeleton or len(warlock_group) < max_warlock):
+            elif game.score < score_requirement and (len(skeleton_group) < max_skeleton or len(warlock_group) < max_warlock):
                 position_x = random.randint(600, 800)
                 position_y = random.randint(350, 550)
                 chance = random.randint(1,100)
-                if chance > 0 and chance <= 70 and len(test_group) < max_skeleton:
-                    test_group.add(Skeleton_red((position_x, position_y)))
+                if chance > 0 and chance <= 70 and len(skeleton_group) < max_skeleton:
+                    skeleton_group.add(Skeleton_red((position_x, position_y)))
                 elif chance > 70 and chance <= 100 and len(warlock_group) < max_warlock:
                     warlock_group.add(Warlock((position_x, position_y)))
             surface.blit(background, (0,0))
@@ -101,8 +101,8 @@ def start_stage(game):
             bullet_group.update()
             fire_effect.update()
             demon_group.update()
-            if len(avatar_group) > 0 and len(test_group) > 0:
-                battle = pygame.sprite.spritecollide(avatar_group.sprite, test_group, dokill=False, collided=pygame.sprite.collide_mask)
+            if len(avatar_group) > 0 and len(skeleton_group) > 0:
+                battle = pygame.sprite.spritecollide(avatar_group.sprite, skeleton_group, dokill=False, collided=pygame.sprite.collide_mask)
                 avatar_group.sprite.update_collision(battle)
             if len(avatar_group) > 0 and len(warlock_group) > 0:
                 battle = pygame.sprite.spritecollide(avatar_group.sprite, warlock_group, dokill=False, collided=pygame.sprite.collide_mask)
@@ -119,7 +119,7 @@ def start_stage(game):
                 if len(fire_effect) > 0:
                     battle = pygame.sprite.spritecollide(avatar_group.sprite, fire_effect, dokill=False, collided=pygame.sprite.collide_mask)
                     avatar_group.sprite.update_bullet_collision(battle)
-                test_group.update(avatar_group.sprite.rect.center, game)
+                skeleton_group.update(avatar_group.sprite.rect.center, game)
                 warlock_group.update(avatar_group.sprite.rect.center, game)
                 draw_health_bar(avatar_group.sprite, surface)
                 meteor_ready = draw_meteor_icon(count, surface)
@@ -128,7 +128,7 @@ def start_stage(game):
             fire_effect.draw(surface)
             portal_group.draw(surface)
             avatar_group.draw(surface)
-            test_group.draw(surface)
+            skeleton_group.draw(surface)
             game.draw(surface)
             if aimopen:
                 pygame.draw.circle(surface,(255,0,0),pygame.mouse.get_pos(),20,5)

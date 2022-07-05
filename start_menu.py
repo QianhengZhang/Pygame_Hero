@@ -11,7 +11,7 @@ difficulty = 0
 
 pygame.init()
 clock = pygame.time.Clock()
-screen_width = 1034
+screen_width = 1080
 screen_height = 778
 screen = pygame.display.set_mode((screen_width, screen_height))
 pygame.display.set_caption("The Medieval Knight Game!")
@@ -27,7 +27,7 @@ white = (255, 255, 255)
 black = (0, 0, 0)
 
 background = pygame.image.load("menu_background.png")
-background = pygame.transform.scale(background, (1080, 720))
+background = pygame.transform.scale(background, (1034, 778))
 
 # Background Sound
 mixer.music.load("background.wav")

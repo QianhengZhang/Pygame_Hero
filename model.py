@@ -4,8 +4,9 @@ import time
 import random
 
 HERO_ASSET = 'assets/imgs/Sprites/HeroKnight/'
-Warlock_ASSET = 'assets/imgs/Sprites/Warlock/'
-Skeleton_ASSET = 'assets/imgs/Sprites/Skeleton/'
+WARLOCK_ASSET = 'assets/imgs/Sprites/Warlock/'
+SKELETON_ASSET = 'assets/imgs/Sprites/Skeleton/'
+BOSS_ASSET = 'assets/imgs/Sprites/Boss/'
 
 class Hero(pygame.sprite.Sprite):
 
@@ -79,6 +80,8 @@ class Hero(pygame.sprite.Sprite):
         self.image = self.images[self.status][self.index]
         self.image = pygame.transform.scale(self.image, (150, 72))
         self.mask = pygame.mask.from_surface(self.image)
+        if self.status in ['attack', 'attack2', 'attack3']:
+            self.mask =  pygame.mask.from_surface( pygame.transform.scale(self.image, (165, 80)))
         if self.direction == -1:
             self.image = pygame.transform.flip(self.image, True, False)
 
@@ -104,17 +107,18 @@ class Hero(pygame.sprite.Sprite):
         if len(battle) > 0:
             if self.status in status:
                 for monster in battle:
-                    if (new- monster.last_hurt > monster.hurt_cd):
+                    if (new- monster.last_hurt > monster.hurt_cd) and monster.state != 'death':
+                        print(monster.type + f' is under attack!')
                         monster.last_hurt = time.time()
                         monster.hp -= self.attack
                         if monster.type == 'warlock':
                             monster.state = 'hurt'
-                            monster.lock = 0
                         elif monster.direction == 1:
                             monster.state = 'hurt_left'
                         else:
                             monster.state = 'hurt_right'
-                        monster.index = 0
+                        monster.lock = 1
+                        monster.index = -1
             else:
                 for monster in battle:
                     if monster.state in ['attack_left', 'attack_right']:
@@ -156,15 +160,12 @@ class Hero(pygame.sprite.Sprite):
                     bullet.kill()
 
     def update_hurt(self, monster):
-        print('hurt')
         self.status = 'hurt'
         self.rect.x -= monster.direction * 15
         self.image = self.images[self.status][self.index]
         self.index = (self.index + 1) % len(self.images[self.status])
-        print(self.index)
         if self.index == len(self.images[self.status]) - 1:
             self.status = ['idle']
-            print('end')
         if self.direction == -1:
             self.image = pygame.transform.flip(self.image, True, False)
 
@@ -174,21 +175,22 @@ class Hero(pygame.sprite.Sprite):
 class Boss(pygame.sprite.Sprite):
     def __init__(self, pos):
         pygame.sprite.Sprite.__init__(self)
-        path = 'assets/imgs/Sprites/Boss/'
-        self.hp = 200
+        BOSS_ASSET = 'assets/imgs/Sprites/Boss/'
+        self.hp = 1200
+        self.maxHp = 1200
         self.index = 0
         self.image = pygame.Surface((160,144))
-        image_surf = pygame.image.load(path + '/idle/demon-idle_0.png').convert()
+        image_surf = pygame.image.load(BOSS_ASSET + '/idle/demon-idle_0.png').convert()
         self.image.blit(image_surf,(0,0))
         self.image.set_colorkey((0,0,0))
         self.rect = self.image.get_rect(topleft=pos)
         self.state = 'fly_attack'
         self.images = {
-            'fly_idle': [pygame.image.load(path + f'idle/demon-idle_{i}.png') for i in range(0, 6)],
-            'fly_attack': [pygame.image.load(path + f'attack/demon-attack_{i}.png') for i in range(0, 8)],
-            'transform' : [pygame.image.load(path + f'ImpactExplosion/ImpactExplosion_{i}.png') for i in range(0, 7)],
-            'run_attack': [pygame.image.load(path + f'nightmare-run/nightmare-run_{i}.png') for i in range(0, 4)],
-            'run_idle': [pygame.image.load(path + f'nightmare-idle/nightmare-idle_{i}.png') for i in range(0, 4)]
+            'fly_idle': [pygame.image.load(BOSS_ASSET + f'idle/demon-idle_{i}.png') for i in range(0, 6)],
+            'fly_attack': [pygame.image.load(BOSS_ASSET + f'attack/demon-attack_{i}.png') for i in range(0, 8)],
+            'transform' : [pygame.image.load(BOSS_ASSET + f'ImpactExplosion/ImpactExplosion_{i}.png') for i in range(0, 7)],
+            'run_attack': [pygame.image.load(BOSS_ASSET + f'nightmare-run/nightmare-run_{i}.png') for i in range(0, 4)],
+            'run_idle': [pygame.image.load(BOSS_ASSET + f'nightmare-idle/nightmare-idle_{i}.png') for i in range(0, 4)]
         }
         self.mask = pygame.mask.from_surface(self.image)
         self.rect = self.image.get_rect(topleft=pos)
@@ -209,6 +211,7 @@ class Boss(pygame.sprite.Sprite):
         self.run_mode_step3_direction = 1
         self.run_mode_step4_direction = 1
         self.run_mode_step5_direction = 1
+
     def update(self,hero_pos):
         if self.hp <= 0:
             self.kill()
@@ -344,23 +347,23 @@ class Boss(pygame.sprite.Sprite):
                 self.state = 'fly_idle'
                 if self.rect.y > 150:
                     self.rect.move_ip(0, -3)
-                if self.rect.y >= 150:
+                else:
                     if self.lock == 0:
-                        if self.framecount == 301:
+                        if self.framecount >= 301:
                             self.modelock = 0
                         else:
                             self.framecount = 0
                             self.lock = 1
-                    if self.lock == 1:
+                    else:
                         if xdistance >= 0:
                             self.direction = 1
                         else:
                             self.direction = -1
                         if self.framecount == 30:
                             self.callminion = 1
-                        if self.framecount == 31:
+                        elif self.framecount == 31:
                             self.callminion = 0
-                        if self.framecount == 300:
+                        elif self.framecount == 300:
                             self.lock = 0
         self.framecount+= 1
         self.index = (self.index + 1) % (len(self.images[self.state]))
@@ -373,7 +376,7 @@ class Boss(pygame.sprite.Sprite):
 
     def draw(self, surface):
         surface.blit(self.image, self.rect)
-        
+
 class Breath(pygame.sprite.Sprite):
     def __init__(self,pos,direction):
         pygame.sprite.Sprite.__init__(self)
@@ -402,7 +405,7 @@ class Breath(pygame.sprite.Sprite):
             self.image = pygame.transform.flip(self.image, True, False)
     def draw(self, surface):
         surface.blit(self.image, self.rect)
-        
+
 class Fire(pygame.sprite.Sprite):
     def __init__(self,pos):
         pygame.sprite.Sprite.__init__(self)
@@ -443,8 +446,10 @@ class Meteor(pygame.sprite.Sprite):
     def __init__(self, pos):
         pygame.sprite.Sprite.__init__(self)
         self.index = 0
+        self.attack = 88
         self.images = [pygame.image.load('assets/imgs/Sprites/Meteor/' + f'MeteorShower_{i}.png') for i in range(0, 16)]
         image_surf = pygame.image.load('assets/imgs/Sprites/Meteor/MeteorShower_0.png').convert()
+        image_surf = pygame.transform.scale(image_surf, (120, 60))
         self.image = pygame.Surface((30, 60))
         self.image.blit(image_surf, (0, 0))
         self.image.set_colorkey((0, 0, 0))
@@ -454,10 +459,27 @@ class Meteor(pygame.sprite.Sprite):
 
     def update(self):
         self.image = self.images[self.index]
+        self.image = pygame.transform.scale(self.image, (120, 60))
         self.index = (self.index+1)%16
         self.countframe += 1
-        if self.countframe == 160:
+        if self.countframe == 80:
             self.kill()
+
+    def update_collision(self, battle):
+        new = time.time()
+        if len(battle) > 0:
+            for monster in battle:
+                if (new- monster.last_hurt > monster.hurt_cd):
+                    monster.last_hurt = time.time()
+                    monster.hp -= self.attack
+                    if monster.type == 'warlock':
+                        monster.state = 'hurt'
+                        monster.lock = 0
+                    elif monster.direction == 1:
+                        monster.state = 'hurt_left'
+                    else:
+                        monster.state = 'hurt_right'
+                        monster.index = 0
 
     def draw(self, surface):
         surface.blit(self.image, self.rect)
@@ -539,7 +561,7 @@ class Skeleton_blue(pygame.sprite.Sprite):
         self.cd = 1.2
         self.last = time.time()
         self.image = pygame.Surface((64, 64))
-        self.image_surf = pygame.image.load(Skeleton_ASSET + f'SkeletonMage_Red.png').convert()
+        self.image_surf = pygame.image.load(SKELETON_ASSET + f'SkeletonMage_Red.png').convert()
         self.image.blit(self.image_surf, (0, 0), (180, 0, 64, 64))
         self.image.set_colorkey((0, 0, 0))
         self.rect = self.image.get_rect(topleft=pos)
@@ -668,7 +690,7 @@ class Skeleton_red(pygame.sprite.Sprite):
         self.cd = 1.2
         self.last = time.time()
         self.image = pygame.Surface((64, 64))
-        self.image_surf = pygame.image.load(Skeleton_ASSET + f'SkeletonMage_Red.png').convert()
+        self.image_surf = pygame.image.load(SKELETON_ASSET + f'SkeletonMage_Red.png').convert()
         self.image.blit(self.image_surf, (0, 0), (180, 0, 64, 64))
         self.image.set_colorkey((0, 0, 0))
         self.rect = self.image.get_rect(topleft=pos)
@@ -806,15 +828,15 @@ class Warlock(pygame.sprite.Sprite):
         self.hurt_cd = 0.2
         self.last_hurt = time.time()
         self.images = {
-            'idle': [pygame.image.load(Warlock_ASSET + f'Idle/Warlock_Idle_{i}.png') for i in range(0, 12)],
-            'run': [pygame.image.load(Warlock_ASSET + f'Run/Warlock_Run_{i}.png') for i in range(0, 8)],
-            'death': [pygame.image.load(Warlock_ASSET + f'Death/Warlock_Death_{i}.png') for i in range(0, 13)],
-            'attack' : [pygame.image.load(Warlock_ASSET + f'Attack/Warlock_Attack_{i}.png') for i in range(0, 13)],
-            'spellcast': [pygame.image.load(Warlock_ASSET + f'Spellcast/Warlock_Spellcast_{i}.png') for i in range(0, 14)],
-            'hurt': [pygame.image.load(Warlock_ASSET + f'Hurt/Warlock_Hurt_{i}.png') for i in range(0, 4)],
+            'idle': [pygame.image.load(WARLOCK_ASSET + f'Idle/Warlock_Idle_{i}.png') for i in range(0, 12)],
+            'run': [pygame.image.load(WARLOCK_ASSET + f'Run/Warlock_Run_{i}.png') for i in range(0, 8)],
+            'death': [pygame.image.load(WARLOCK_ASSET + f'Death/Warlock_Death_{i}.png') for i in range(0, 13)],
+            'attack' : [pygame.image.load(WARLOCK_ASSET + f'Attack/Warlock_Attack_{i}.png') for i in range(0, 13)],
+            'spellcast': [pygame.image.load(WARLOCK_ASSET + f'Spellcast/Warlock_Spellcast_{i}.png') for i in range(0, 14)],
+            'hurt': [pygame.image.load(WARLOCK_ASSET + f'Hurt/Warlock_Hurt_{i}.png') for i in range(0, 4)],
         }
 
-        image_surf = pygame.image.load(Warlock_ASSET + 'idle/Warlock_Idle_0.png').convert()
+        image_surf = pygame.image.load(WARLOCK_ASSET + 'idle/Warlock_Idle_0.png').convert()
         image_surf = pygame.transform.scale(image_surf, (120, 96))
         self.image = pygame.Surface((100,80))
         self.image.blit(image_surf, (0,0))
@@ -848,7 +870,7 @@ class Warlock(pygame.sprite.Sprite):
             if self.state == 'attack' and self.index == 1:
                 self.fire = 0
         if self.lock == 0:
-            if self.hp < 0:
+            if self.hp <= 0:
                 self.state = 'death'
                 self.index = 0
                 self.lock = 1
@@ -996,25 +1018,24 @@ class TextBox():
             self.status = 'close'
             return 'running'
 
-class Boss(pygame.sprite.Sprite):
+class Boss_icon(pygame.sprite.Sprite):
 
 
 
     def __init__(self, pos):
         pygame.sprite.Sprite.__init__(self)
-        path = 'assets/imgs/Sprites/Boss/'
         self.index = 0
         self.image = pygame.Surface((160,144))
-        image_surf = pygame.image.load(path + '/idle/demon-idle_0.png').convert()
+        image_surf = pygame.image.load(BOSS_ASSET + '/idle/demon-idle_0.png').convert()
         self.image.blit(image_surf,(0,0))
         self.image.set_colorkey((0,0,0))
         self.rect = self.image.get_rect(topleft=pos)
         self.state = 'idle'
         self.images = {
-            'idle': [pygame.image.load(path + f'idle/demon-idle_{i+1}.png') for i in range(0, 5)],
-            'attack': [pygame.image.load(path + f'attack/demon-attack_{i+1}.png') for i in range(0, 7)],
-            'nightmare-run': [pygame.image.load(path + f'nightmare-run/nightmare-run_{i+1}.png') for i in range(0, 3)],
-            'nightmare-idle': [pygame.image.load(path + f'nightmare-idle/nightmare-idle_{i+1}.png') for i in range(0, 3)],
+            'idle': [pygame.image.load(BOSS_ASSET + f'idle/demon-idle_{i+1}.png') for i in range(0, 5)],
+            'attack': [pygame.image.load(BOSS_ASSET + f'attack/demon-attack_{i+1}.png') for i in range(0, 7)],
+            'nightmare-run': [pygame.image.load(BOSS_ASSET + f'nightmare-run/nightmare-run_{i+1}.png') for i in range(0, 3)],
+            'nightmare-idle': [pygame.image.load(BOSS_ASSET + f'nightmare-idle/nightmare-idle_{i+1}.png') for i in range(0, 3)],
         }
         self.mask = pygame.mask.from_surface(self.image)
         self.rect = self.image.get_rect(topleft=pos)
@@ -1036,6 +1057,8 @@ class GameManager():
         self.fontobj = setup_fonts(24)
         self.state = 'running'
         self.next = True
+        self.window_size_x = 1080
+        self.window_size_y = 720
 
     def draw(self, surface):
          text = self.fontobj.render("Score: "+str(self.score), True, (255, 255, 255))
