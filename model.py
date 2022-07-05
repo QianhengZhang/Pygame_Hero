@@ -529,16 +529,25 @@ class Skeleton_blue(pygame.sprite.Sprite):
 
     def __init__(self, pos):
         pygame.sprite.Sprite.__init__(self)
+        self.type = 'skeleton'
         self.hp = 50
+        self.attack = 15
         self.state = 'born'
         self.index = 0
-        self.image = pygame.Surface((64,64))
-        self.image_surf = pygame.image.load(Skeleton_ASSET + f'SkeletonMage_Blue.png').convert()
-        self.image.blit(self.image_surf,(0,0),(180,0,64,64))
-        self.image.set_colorkey((0,0,0))
+        self.hurt_cd = 0.2
+        self.last_hurt = time.time()
+        self.cd = 1.2
+        self.last = time.time()
+        self.image = pygame.Surface((64, 64))
+        self.image_surf = pygame.image.load(Skeleton_ASSET + f'SkeletonMage_Red.png').convert()
+        self.image.blit(self.image_surf, (0, 0), (180, 0, 64, 64))
+        self.image.set_colorkey((0, 0, 0))
         self.rect = self.image.get_rect(topleft=pos)
         self.lock = 1
+        self.speed = random.randrange(1, 4)
+        self.count = 2
         self.direction = 1
+        self.score = 40
         self.image_rects = {
             'idle_left' : [pygame.Rect(0,64,64,64), pygame.Rect(64,64,64,64), pygame.Rect(128,64,64,64),
                            pygame.Rect(192,64,64,64)],
@@ -571,48 +580,73 @@ class Skeleton_blue(pygame.sprite.Sprite):
                       pygame.Rect(384, 1600, 64, 64)]
         }
 
-    def update(self,hero_center_pos):
-        if self.state == 'born' and self.index == 8:
-            self.state = 'idle_left'
-            self.lock = 0
-            self.index = 0
-        if self.hp < 0:
-            if self.direction == 1:
-                self.state = 'death_left'
-            else:
-                self.state = 'death_right'
-            self.lock = 1
-        if (self.state == 'death_left' or self.state == 'death_right') and self.index == 6:
-            self.kill()
+    def update(self,hero_center_pos,game):
+        if self.lock == 1:
+            if self.state == 'born' and self.index == 8:
+                self.lock = 0
+                self.index = 0
+                self.state = 'idle_left'
+            if (self.state == 'death_left' or self.state == 'death_right') and self.index == 6:
+                self.kill()
+                game.score += self.score
+            if self.state == 'hurt_left' and self.index == 5:
+                self.lock = 0
+                self.index = 0
+                self.state = 'idle_left'
+            if self.state == 'hurt_right' and self.index == 5:
+                self.lock = 0
+                self.index = 0
+                self.state = 'idle_right'
+            if self.state == 'attack_left' and self.index == 7:
+                self.lock = 0
+                self.index = 0
+                self.state = 'idle_left'
+            if self.state == 'attack_right' and self.index == 7:
+                self.lock = 0
+                self.index = 0
+                self.state = 'idle_right'
         if self.lock == 0:
-            x = self.rect.centerx
-            y = self.rect.centery
-            distance = ((hero_center_pos[0]-x)**2 + (hero_center_pos[1]-y)**2)**0.5
-            if distance < 150 and distance > 20:
+            if self.hp <= 0:
                 if self.direction == 1:
-                    self.state = 'run_left'
-                if self.direction == -1:
-                    self.state = 'run_right'
-                if hero_center_pos[0] < x:
-                    self.direction = 1
-                    self.rect.move_ip(-1,0)
-                if hero_center_pos[0] > x:
-                    self.direction = -1
-                    self.rect.move_ip(1,0)
-                if hero_center_pos[1] < y:
-                    self.rect.move_ip(0,-1)
-                if hero_center_pos[1] > y:
-                    self.rect.move_ip(0,1)
-            if distance <= 20:
-                if self.direction == 1:
-                    self.state = 'attack_left'
-                if self.direction == -1:
-                    self.state = 'attack_right'
-            if distance >= 150:
-                if self.direction == 1:
-                    self.state = 'idle_left'
-                if self.direction == -1:
-                    self.state = 'idle_right'
+                    self.state = 'death_left'
+                else:
+                    self.state = 'death_right'
+                self.lock = 1
+                self.index = 0
+            if self.state not in ['death_left','death_right','hurt_left','hurt_right']:
+                x = self.rect.centerx
+                y = self.rect.centery
+                distance = ((hero_center_pos[0] - x) ** 2 + (hero_center_pos[1] - y) ** 2) ** 0.5
+                if distance <= 30 and distance >= 15 and time.time() - self.last > self.cd:
+                    self.last = time.time()
+                    if self.direction == 1:
+                        self.state = 'attack_left'
+                    if self.direction == -1:
+                        self.state = 'attack_right'
+                    self.lock = 1
+                    self.index = 0
+                if self.state not in ['attack_left','attack_right']:
+                    if distance < 350 and distance > 20 and self.count % 2 == 0:
+                        if self.direction == 1:
+                            self.state = 'run_left'
+                        if self.direction == -1:
+                            self.state = 'run_right'
+                        if hero_center_pos[0] < x:
+                            self.direction = 1
+                            self.rect.move_ip(-1 * self.speed, 0)
+                        if hero_center_pos[0] > x:
+                            self.direction = -1
+                            self.rect.move_ip(1 * self.speed, 0)
+                        if hero_center_pos[1] < y:
+                            self.rect.move_ip(0, -1 * self.speed)
+                        if hero_center_pos[1] > y:
+                            self.rect.move_ip(0, 1 * self.speed)
+                    self.count += 1
+                    if distance >= 350:
+                        if self.direction == 1:
+                            self.state = 'idle_left'
+                        if self.direction == -1:
+                            self.state = 'idle_right'
         self.index = (self.index + 1)%len(self.image_rects[self.state])
         self.image.blit(self.image_surf,(0,0),self.image_rects[self.state][self.index])
     def draw(self, surface):
@@ -633,10 +667,10 @@ class Skeleton_red(pygame.sprite.Sprite):
         self.last_hurt = time.time()
         self.cd = 1.2
         self.last = time.time()
-        self.image = pygame.Surface((64,64))
+        self.image = pygame.Surface((64, 64))
         self.image_surf = pygame.image.load(Skeleton_ASSET + f'SkeletonMage_Red.png').convert()
-        self.image.blit(self.image_surf,(0,0),(180,0,64,64))
-        self.image.set_colorkey((0,0,0))
+        self.image.blit(self.image_surf, (0, 0), (180, 0, 64, 64))
+        self.image.set_colorkey((0, 0, 0))
         self.rect = self.image.get_rect(topleft=pos)
         self.lock = 1
         self.speed = random.randrange(1, 4)
@@ -644,92 +678,112 @@ class Skeleton_red(pygame.sprite.Sprite):
         self.direction = 1
         self.score = 40
         self.image_rects = {
-            'idle_left' : [pygame.Rect(0,64,64,64), pygame.Rect(64,64,64,64), pygame.Rect(128,64,64,64),
-                           pygame.Rect(192,64,64,64)],
+            'idle_left': [pygame.Rect(0, 64, 64, 64), pygame.Rect(64, 64, 64, 64), pygame.Rect(128, 64, 64, 64),
+                          pygame.Rect(192, 64, 64, 64)],
             'idle_right': [pygame.Rect(0, 192, 64, 64), pygame.Rect(64, 192, 64, 64), pygame.Rect(128, 192, 64, 64),
-                          pygame.Rect(192, 192, 64, 64)],
-            'run_left' : [pygame.Rect(0,320,64,64),pygame.Rect(64,320,64,64),pygame.Rect(128,320,64,64),
-                        pygame.Rect(192,320,64,64),pygame.Rect(256,320,64,64),pygame.Rect(320,320,64,64)],
+                           pygame.Rect(192, 192, 64, 64)],
+            'run_left': [pygame.Rect(0, 320, 64, 64), pygame.Rect(64, 320, 64, 64), pygame.Rect(128, 320, 64, 64),
+                         pygame.Rect(192, 320, 64, 64), pygame.Rect(256, 320, 64, 64), pygame.Rect(320, 320, 64, 64)],
             'run_right': [pygame.Rect(0, 448, 64, 64), pygame.Rect(64, 448, 64, 64), pygame.Rect(128, 448, 64, 64),
-                         pygame.Rect(192, 448, 64, 64), pygame.Rect(256, 448, 64, 64), pygame.Rect(320, 448, 64, 64)],
+                          pygame.Rect(192, 448, 64, 64), pygame.Rect(256, 448, 64, 64), pygame.Rect(320, 448, 64, 64)],
             'attack_left': [pygame.Rect(0, 832, 64, 64), pygame.Rect(64, 832, 64, 64), pygame.Rect(128, 832, 64, 64),
-                       pygame.Rect(192, 832, 64, 64), pygame.Rect(256, 832, 64, 64), pygame.Rect(320, 832, 64, 64),
-                       pygame.Rect(384, 832, 64, 64), pygame.Rect(448, 832, 64, 64)],
+                            pygame.Rect(192, 832, 64, 64), pygame.Rect(256, 832, 64, 64), pygame.Rect(320, 832, 64, 64),
+                            pygame.Rect(384, 832, 64, 64), pygame.Rect(448, 832, 64, 64)],
             'attack_right': [pygame.Rect(0, 960, 64, 64), pygame.Rect(64, 960, 64, 64), pygame.Rect(128, 960, 64, 64),
-                       pygame.Rect(192, 960, 64, 64), pygame.Rect(256, 960, 64, 64), pygame.Rect(320, 960, 64, 64),
-                       pygame.Rect(384, 960, 64, 64), pygame.Rect(448, 960, 64, 64)],
-            'born' : [pygame.Rect(0,1088,64,64),pygame.Rect(64,1088,64,64),pygame.Rect(128,1088,64,64),
-                        pygame.Rect(192,1088,64,64),pygame.Rect(256,1088,64,64),pygame.Rect(320,1088,64,64),
-                        pygame.Rect(384,1088,64,64),pygame.Rect(448,1088,64,64),pygame.Rect(512,1088,64,64)],
-            'hurt_left' : [pygame.Rect(0,1280,64,64),pygame.Rect(64,1280,64,64),pygame.Rect(128,1280,64,64),
-                        pygame.Rect(192,1280,64,64),pygame.Rect(256,1280,64,64),pygame.Rect(320,1280,64,64)],
+                             pygame.Rect(192, 960, 64, 64), pygame.Rect(256, 960, 64, 64),
+                             pygame.Rect(320, 960, 64, 64),
+                             pygame.Rect(384, 960, 64, 64), pygame.Rect(448, 960, 64, 64)],
+            'born': [pygame.Rect(0, 1088, 64, 64), pygame.Rect(64, 1088, 64, 64), pygame.Rect(128, 1088, 64, 64),
+                     pygame.Rect(192, 1088, 64, 64), pygame.Rect(256, 1088, 64, 64), pygame.Rect(320, 1088, 64, 64),
+                     pygame.Rect(384, 1088, 64, 64), pygame.Rect(448, 1088, 64, 64), pygame.Rect(512, 1088, 64, 64)],
+            'hurt_left': [pygame.Rect(0, 1280, 64, 64), pygame.Rect(64, 1280, 64, 64), pygame.Rect(128, 1280, 64, 64),
+                          pygame.Rect(192, 1280, 64, 64), pygame.Rect(256, 1280, 64, 64),
+                          pygame.Rect(320, 1280, 64, 64)],
             'hurt_right': [pygame.Rect(0, 1344, 64, 64), pygame.Rect(64, 1344, 64, 64), pygame.Rect(128, 1344, 64, 64),
                            pygame.Rect(192, 1344, 64, 64), pygame.Rect(256, 1344, 64, 64),
                            pygame.Rect(320, 1344, 64, 64)],
-            'death_left' : [pygame.Rect(0,1472,64,64),pygame.Rect(64,1472,64,64),pygame.Rect(128,1472,64,64),
-                        pygame.Rect(192,1472,64,64),pygame.Rect(256,1472,64,64),pygame.Rect(320,1472,64,64),
-                        pygame.Rect(384,1472,64,64)],
+            'death_left': [pygame.Rect(0, 1472, 64, 64), pygame.Rect(64, 1472, 64, 64), pygame.Rect(128, 1472, 64, 64),
+                           pygame.Rect(192, 1472, 64, 64), pygame.Rect(256, 1472, 64, 64),
+                           pygame.Rect(320, 1472, 64, 64),
+                           pygame.Rect(384, 1472, 64, 64)],
             'death_right': [pygame.Rect(0, 1600, 64, 64), pygame.Rect(64, 1600, 64, 64), pygame.Rect(128, 1600, 64, 64),
-                      pygame.Rect(192, 1600, 64, 64), pygame.Rect(256, 1600, 64, 64), pygame.Rect(320, 1600, 64, 64),
-                      pygame.Rect(384, 1600, 64, 64)]
+                            pygame.Rect(192, 1600, 64, 64), pygame.Rect(256, 1600, 64, 64),
+                            pygame.Rect(320, 1600, 64, 64),
+                            pygame.Rect(384, 1600, 64, 64)]
         }
 
-    def update(self,hero_center_pos, game):
-        if self.state in ['hurt_left', 'hurt_right'] and self.index != len(self.image_rects[self.state]) - 1:
-            if self.direction == 1:
-                self.state = 'hurt_left'
-            else:
-                self.state = 'hurt_right'
-        else:
+    def update(self, hero_center_pos, game):
+        if self.lock == 1:
             if self.state == 'born' and self.index == 8:
-                pygame.mixer.music.load('assets/sounds/WK36XX5-summon-skeleton-companion.wav')
-                pygame.mixer.music.play()
-                self.state = 'idle_left'
                 self.lock = 0
                 self.index = 0
-            if self.hp < 0:
+                self.state = 'idle_left'
+            if (self.state == 'death_left' or self.state == 'death_right') and self.index == 6:
+                self.kill()
+                game.score += self.score
+            if self.state == 'hurt_left' and self.index == 5:
+                self.lock = 0
+                self.index = 0
+                self.state = 'idle_left'
+            if self.state == 'hurt_right' and self.index == 5:
+                self.lock = 0
+                self.index = 0
+                self.state = 'idle_right'
+            if self.state == 'attack_left' and self.index == 7:
+                self.lock = 0
+                self.index = 0
+                self.state = 'idle_left'
+            if self.state == 'attack_right' and self.index == 7:
+                self.lock = 0
+                self.index = 0
+                self.state = 'idle_right'
+        if self.lock == 0:
+            if self.hp <= 0:
                 if self.direction == 1:
                     self.state = 'death_left'
                 else:
                     self.state = 'death_right'
                 self.lock = 1
-            if (self.state == 'death_left' or self.state == 'death_right') and self.index == 6:
-                self.kill()
-                game.score += self.score
-            if self.lock == 0:
+                self.index = 0
+            if self.state not in ['death_left', 'death_right', 'hurt_left', 'hurt_right']:
                 x = self.rect.centerx
                 y = self.rect.centery
-                distance = ((hero_center_pos[0]-x)**2 + (hero_center_pos[1]-y)**2)**0.5
-                if distance < 350 and distance > 20 and self.count % 2 == 0:
-                    if self.direction == 1:
-                        self.state = 'run_left'
-                    if self.direction == -1:
-                        self.state = 'run_right'
-                    if hero_center_pos[0] < x:
-                        self.direction = 1
-                        self.rect.move_ip(-1 * self.speed,0)
-                    if hero_center_pos[0] > x:
-                        self.direction = -1
-                        self.rect.move_ip(1 * self.speed,0)
-                    if hero_center_pos[1] < y:
-                        self.rect.move_ip(0,-1 * self.speed)
-                    if hero_center_pos[1] > y:
-                        self.rect.move_ip(0,1 * self.speed)
-                self.count += 1
+                distance = ((hero_center_pos[0] - x) ** 2 + (hero_center_pos[1] - y) ** 2) ** 0.5
                 if distance <= 30 and distance >= 15 and time.time() - self.last > self.cd:
                     self.last = time.time()
                     if self.direction == 1:
                         self.state = 'attack_left'
                     if self.direction == -1:
                         self.state = 'attack_right'
-                if distance >= 350:
-                    if self.direction == 1:
-                        self.state = 'idle_left'
-                    if self.direction == -1:
-                        self.state = 'idle_right'
-        self.index = (self.index + 1)%len(self.image_rects[self.state])
-        self.image.blit(self.image_surf,(0,0),self.image_rects[self.state][self.index])
+                    self.lock = 1
+                    self.index = 0
+                if self.state not in ['attack_left', 'attack_right']:
+                    if distance < 350 and distance > 20 and self.count % 2 == 0:
+                        if self.direction == 1:
+                            self.state = 'run_left'
+                        if self.direction == -1:
+                            self.state = 'run_right'
+                        if hero_center_pos[0] < x:
+                            self.direction = 1
+                            self.rect.move_ip(-1 * self.speed, 0)
+                        if hero_center_pos[0] > x:
+                            self.direction = -1
+                            self.rect.move_ip(1 * self.speed, 0)
+                        if hero_center_pos[1] < y:
+                            self.rect.move_ip(0, -1 * self.speed)
+                        if hero_center_pos[1] > y:
+                            self.rect.move_ip(0, 1 * self.speed)
+                    self.count += 1
+                    if distance >= 350:
+                        if self.direction == 1:
+                            self.state = 'idle_left'
+                        if self.direction == -1:
+                            self.state = 'idle_right'
+        self.index = (self.index + 1) % len(self.image_rects[self.state])
+        self.image.blit(self.image_surf, (0, 0), self.image_rects[self.state][self.index])
+
     def draw(self, surface):
+
         surface.blit(self.image, self.rect)
 
 class Warlock(pygame.sprite.Sprite):
