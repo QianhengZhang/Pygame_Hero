@@ -1,6 +1,7 @@
 import pygame
 import start_menu
-from model import  Hero, Tester, TextBox, Skeleton_red, GameManager, Warlock, Warlock_bullet, Fire, Portal, Meteor, Boss_icon
+from controller import check_events
+from model import Hero, Skeleton_blue, TextBox, Skeleton_red, GameManager, Warlock, Warlock_bullet, Fire, Portal, Meteor, Boss_icon
 import random
 import time
 
@@ -24,32 +25,33 @@ def start_stage(game):
     count = time.time()
     meteor_ready = False
     aimopen = False
-    for i in range (0, 2):
-        tester = Skeleton_red((400 + 50 * i, 400 + 25 * i))
-        skeleton_group.add(tester)
-    warlock_group.add(Warlock((550, 600)))
+    skeleton = Skeleton_red((300, 400))
+    skeleton_group.add(skeleton)
+    skeleton = Skeleton_red((350, 550))
+    skeleton_group.add(skeleton)
+    skeleton = Skeleton_blue((300, 700))
+    skeleton_group.add(skeleton)
+    warlock_group.add(Warlock((450, 550)))
     pop = TextBox(surface)
     clock = pygame.time.Clock()
     state = 'running'
     demon_group = pygame.sprite.GroupSingle()
-    demon_group.add(Boss_icon((500, 200)))
+    demon_group.add(Boss_icon((800, 20)))
     portal_group = pygame.sprite.GroupSingle()
     portal_group.add(Portal((500, 500)))
-    pygame.mixer.music.fadeout(5000)
-    pygame.mixer.music.load("background.wav")
-    pygame.mixer.music.play(-1)
+
     if game.difficulty == 0:
-        max_skeleton = 2
-        max_warlock = 1
-        score_requirement = 300
-    elif game.difficulty == 1:
         max_skeleton = 3
         max_warlock = 1
         score_requirement = 400
-    else:
-        max_skeleton = 3
+    elif game.difficulty == 1:
+        max_skeleton = 4
         max_warlock = 2
         score_requirement = 500
+    else:
+        max_skeleton = 5
+        max_warlock = 3
+        score_requirement = 600
 
     while True:
         clock.tick(18)
@@ -85,15 +87,12 @@ def start_stage(game):
             else:
                 pop.pop_up(['Notes:', 'Press Q to quit', 'Press P to resume the game!', suggestions[index]])
         else:
-            if controls['click']:
-                print(controls['click'])
-                #warlock_group.add(Warlock(controls['click']))
-            elif game.score < score_requirement and (len(skeleton_group) < max_skeleton or len(warlock_group) < max_warlock):
+            if game.score < score_requirement and (len(skeleton_group) < max_skeleton or len(warlock_group) < max_warlock):
                 position_x = random.randint(600, 800)
                 position_y = random.randint(350, 550)
                 chance = random.randint(1,100)
                 if chance > 0 and chance <= 70 and len(skeleton_group) < max_skeleton:
-                    skeleton_group.add(Skeleton_red((position_x, position_y)))
+                    skeleton_group.add(random.choice([Skeleton_red((position_x, position_y)), Skeleton_blue((position_x, position_y))]))
                 elif chance > 70 and chance <= 100 and len(warlock_group) < max_warlock:
                     warlock_group.add(Warlock((position_x, position_y)))
             surface.blit(background, (0,0))
@@ -101,18 +100,18 @@ def start_stage(game):
             bullet_group.update()
             fire_effect.update()
             demon_group.update()
-            if len(avatar_group) > 0 and len(skeleton_group) > 0:
-                battle = pygame.sprite.spritecollide(avatar_group.sprite, skeleton_group, dokill=False, collided=pygame.sprite.collide_mask)
-                avatar_group.sprite.update_collision(battle)
-            if len(avatar_group) > 0 and len(warlock_group) > 0:
-                battle = pygame.sprite.spritecollide(avatar_group.sprite, warlock_group, dokill=False, collided=pygame.sprite.collide_mask)
-                avatar_group.sprite.update_collision(battle)
-                for warlock_sprite in warlock_group.sprites():
-                    if warlock_sprite.fire == 1:
-                        bullet_group.add(Warlock_bullet((warlock_sprite.rect.center[0] + 15 * warlock_sprite.direction, warlock_sprite.rect.center[1] - 30),-(warlock_sprite.direction)))
-                    if warlock_sprite.cast == 1:
-                        fire_effect.add(Fire(avatar_group.sprite.rect.move(15,0).topleft))
             if len(avatar_group) > 0:
+                if len(skeleton_group) > 0:
+                    battle = pygame.sprite.spritecollide(avatar_group.sprite, skeleton_group, dokill=False, collided=pygame.sprite.collide_mask)
+                    avatar_group.sprite.update_collision(battle)
+                if len(warlock_group) > 0:
+                    battle = pygame.sprite.spritecollide(avatar_group.sprite, warlock_group, dokill=False, collided=pygame.sprite.collide_mask)
+                    avatar_group.sprite.update_collision(battle)
+                    for warlock_sprite in warlock_group.sprites():
+                        if warlock_sprite.fire == 1:
+                            bullet_group.add(Warlock_bullet((warlock_sprite.rect.center[0] + 15 * warlock_sprite.direction, warlock_sprite.rect.center[1] - 30),-(warlock_sprite.direction)))
+                        if warlock_sprite.cast == 1:
+                            fire_effect.add(Fire(avatar_group.sprite.rect.move(15,0).topleft))
                 if len(bullet_group) > 0:
                     battle = pygame.sprite.spritecollide(avatar_group.sprite, bullet_group, dokill=False, collided=pygame.sprite.collide_mask)
                     avatar_group.sprite.update_bullet_collision(battle)
@@ -122,7 +121,11 @@ def start_stage(game):
                 skeleton_group.update(avatar_group.sprite.rect.center, game)
                 warlock_group.update(avatar_group.sprite.rect.center, game)
                 draw_health_bar(avatar_group.sprite, surface)
-                meteor_ready = draw_meteor_icon(count, surface)
+                if game.magic == True:
+                    meteor_ready = draw_meteor_icon(count, surface)
+                else:
+                    draw_skill_icon(surface)
+                    meteor_ready = False
             warlock_group.draw(surface)
             bullet_group.draw(surface)
             fire_effect.draw(surface)
@@ -140,7 +143,6 @@ def start_stage(game):
             meteor_group.update()
             meteor_group.draw(surface)
             demon_group.draw(surface)
-
         pygame.display.flip()
 
 def portal_collision(teleport, portal):
@@ -172,6 +174,18 @@ def draw_meteor_icon(count, surface):
         surface.blit(image, rect)
         return True
     return False
+
+def draw_skill_icon(surface):
+    pygame.draw.circle(surface, (0,0,0), (50,50), 40)
+
+def group_update(avatar, groups, control):
+    avatar.update(control)
+    for group in groups:
+        group.update()
+
+def group_draw(groups, surface):
+    for group in groups:
+        group.draw(surface)
 
 def draw_health_bar(hero, surface):
     font = setup_fonts(24)
@@ -218,82 +232,6 @@ def setup_fonts(font_size, bold=False, italic=False):
             fonts = ','.join(a) #SysFont expects a string with font names in it
             return pygame.font.SysFont(fonts, font_size, bold, italic)
     return pygame.font.SysFont(None, font_size, bold, italic)
-
-def check_events():
-    ''' A controller of sorts.  Looks for Quit, arrow type events.  Space initiates a jump.
-    '''
-    controls = {
-        'quit' : False,
-        'left' : False,
-        'right' : False,
-        'attack': False,
-        'block': False,
-        'up': False,
-        'down': False,
-        'reborn': False,
-        'click': None,
-        'pop': False,
-        'close': False,
-        'aimchange': False
-    }
-
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            controls['quit'] = True
-
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_q:
-                controls['quit'] = True
-            if event.key == pygame.K_ESCAPE:
-                controls['quit'] = True
-            if event.key == pygame.K_SPACE:
-                controls['jump'] = True
-            if event.key == pygame.K_j:
-                controls['attack'] = True
-            if event.key == pygame.K_r:
-                controls['reborn'] = True
-            if event.key == pygame.K_e:
-                controls['aimchange'] = True
-            if event.key == pygame.K_p:
-                controls['pop'] = True
-            if event.key == pygame.K_0:
-                controls['close'] = True
-        if event.type == pygame.MOUSEBUTTONDOWN:
-                controls['click'] = event.pos
-        if event.type == pygame.KEYUP:
-            pass
-    key_pressed = pygame.key.get_pressed()
-    if key_pressed[pygame.K_a]:
-        controls['left'] = True
-    else:
-        controls['left'] = False
-    if key_pressed[pygame.K_d]:
-        controls['right'] = True
-    else:
-        controls['right'] = False
-    if key_pressed[pygame.K_w]:
-        controls['up'] = True
-    else:
-        controls['up'] = False
-    if key_pressed[pygame.K_s]:
-        controls['down'] = True
-    else:
-        controls['down'] = False
-
-    if key_pressed[pygame.K_k]:
-        controls['block'] = True
-        controls['left'] = False
-        controls['right'] = False
-        controls['up'] = False
-        controls['down'] = False
-    if controls['left'] and controls['right']:
-        controls['left'] = False
-        controls['right'] = False
-    if controls['up'] and controls['down']:
-        controls['up'] = False
-        controls['down'] = False
-    return controls
-
 
 
 if __name__ == "__main__":
