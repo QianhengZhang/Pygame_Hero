@@ -1116,7 +1116,7 @@ class GameManager():
         self.mix4 =  pygame.mixer.Sound('assets/sounds/epic_battle_music_1-6275.wav')
         self.background_channel = pygame.mixer.Channel(0)
         self.battle_channel = pygame.mixer.Channel(1)
-        self.background_channel.play(self.mix)
+        self.background_channel.play(self.mix1)
 
     def draw(self, surface):
          text = self.fontobj.render("Score: "+str(self.score), True, (255, 255, 255))
