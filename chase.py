@@ -138,6 +138,8 @@ def start_chase(game):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
+                game.next = False
+                break
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     running = False

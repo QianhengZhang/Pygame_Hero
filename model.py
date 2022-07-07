@@ -1,4 +1,5 @@
 from turtle import update
+from unittest import result
 import pygame
 import time
 import random
@@ -15,7 +16,7 @@ class Hero(pygame.sprite.Sprite):
         self.maxHp = 200
         self.hp = 200
         self.type = 'hero'
-        self.attack = 100
+        self.attack = 200
         self.coolDown = 0.7
         self.damageCoolDown = 2.5
         self.status = 'idle'
@@ -89,61 +90,68 @@ class Hero(pygame.sprite.Sprite):
     def movement_wrapper(self, up, down, left, right):
         x = 0
         y = 0
-        if up and self.rect.y > 374:
+        if up and self.rect.y > 344:
             y = -1
-        elif down and self.rect.y < 670:
+        elif down and self.rect.y < 700:
             y = 1
-        if left and self.rect.x > 0:
+        if left and self.rect.x > -50:
             x = -1
             self.direction = -1
-        elif right and self.rect.x < 1000:
+        elif right and self.rect.x < 950:
             x = 1
             self.direction = 1
         self.rect.x += x * self.velocity
         self.rect.y += y * self.velocity
 
-    def update_collision(self, battle):
+    def update_attack_collision(self, monsters):
+        new = time.time()
+        for monster in monsters:
+            if (self.rect.left < monster.rect.left + monster.rect.width and
+                self.rect.left + self.rect.width + 5> monster.rect.left and
+                self.rect.top < monster.rect.top + monster.rect.height and
+                self.rect.top + self.rect.height - 20 > monster.rect.top
+            ):
+                if (new- monster.last_hurt > monster.hurt_cd) and monster.state != 'death' and (self.direction == monster.direction or monster.type == 'boss'):
+                    if monster.type != 'boss' or monster.state == 'run_idle':
+                        monster.last_hurt = time.time()
+                        monster.hp -= self.attack
+                        if monster.type == 'warlock':
+                            monster.state = 'hurt'
+                            monster.lock = 1
+                            monster.index = -1
+                        elif monster.direction == 1 and monster.type == 'skeleton':
+                            monster.state = 'hurt_left'
+                            monster.lock = 1
+                            monster.index = -1
+                        elif monster.type == 'skeleton':
+                            monster.state = 'hurt_right'
+                            monster.lock = 1
+                            monster.index = -1
+
+
+    def update_hurt_collision(self, battle):
         status = ['attack', 'attack1', 'attack2']
         new = time.time()
         if len(battle) > 0:
-            if self.status in status:
-                for monster in battle:
-                    if (new- monster.last_hurt > monster.hurt_cd) and monster.state != 'death':
-                        if monster.type != 'boss' or monster.state == 'run_idle':
-                            monster.last_hurt = time.time()
-                            monster.hp -= self.attack
-                            if monster.type == 'warlock':
-                                monster.state = 'hurt'
-                                monster.lock = 1
-                                monster.index = -1
-                            elif monster.direction == 1 and monster.type == 'skeleton':
-                                monster.state = 'hurt_left'
-                                monster.lock = 1
-                                monster.index = -1
-                            elif monster.type == 'skeleton':
-                                monster.state = 'hurt_right'
-                                monster.lock = 1
-                                monster.index = -1
-            else:
-                for monster in battle:
-                    if monster.state in ['attack_left', 'attack_right', 'run_attack', 'run_idle'] and new - self.last_hurt > self.damageCoolDown:
-                        if self.status in ['block', 'block_success', 'attack2'] and self.direction == monster.direction:
-                            self.rect.x -= monster.direction * 10
-                            if monster.type != 'boss':
-                                monster.rect.x += monster.direction * 20
-                            else:
-                                self.last_hurt = time.time()
+            for monster in battle:
+                if monster.state in ['attack_left', 'attack_right', 'run_attack', 'run_idle'] and new - self.last_hurt > self.damageCoolDown:
+                    if self.status in ['block', 'block_success', 'attack2'] and (self.direction == monster.direction or monster.type == 'boss'):
+                        self.rect.x -= monster.direction * 10
+                        if monster.type != 'boss':
+                            monster.rect.x += monster.direction * 20
+                        else:
+                            self.last_hurt = time.time()
                             self.hp -= monster.attack * 0.2
                             self.status = 'block_success'
                             self.index = 0
-                        else:
-                            self.hp -= monster.attack
-                            if self.hp > 0:
-                                pygame.mixer.music.load('assets/sounds/mixkit-human-fighter-pain-scream-2768.wav')
-                                pygame.mixer.music.play()
-                            self.last_hurt = time.time()
-                            self.index = 0
-                            self.update_hurt(monster)
+                    else:
+                        self.hp -= monster.attack
+                        if self.hp > 0:
+                            pygame.mixer.music.load('assets/sounds/mixkit-human-fighter-pain-scream-2768.wav')
+                            pygame.mixer.music.play()
+                        self.last_hurt = time.time()
+                        self.index = 0
+                        self.update_hurt(monster)
 
     def update_bullet_collision(self, battle):
         new = time.time()
@@ -389,10 +397,7 @@ class Boss(pygame.sprite.Sprite):
 
 
     def draw(self, surface):
-        print(0)
         surface.blit(self.image, self.rect)
-        if self.state == 'run_idle':
-            print(1)
 
 class Breath(pygame.sprite.Sprite):
     def __init__(self,pos,direction):
@@ -548,9 +553,6 @@ class Portal(pygame.sprite.Sprite):
         self.status = 'open'
 
     def update(self):
-        print(self.status)
-        print(self.index)
-        print(self.lock)
         if self.status == 'open':
             if self.lock == 0 and self.index != 10:
                 self.image = self.images[self.index]
@@ -1044,12 +1046,10 @@ class TextBox():
         self.status = 'close'
         self.surface = surface
         self.fontobj = setup_fonts(36)
-        self.rect = pygame.Rect((0,0),(1080, 720))
-        self.rect.center = (540, 360)
-        self.image_surf = pygame.image.load('pop_up.jpg').convert()
-        self.image_surf = pygame. transform. scale(self.image_surf, (1080, 720))
-
-
+        self.rect = pygame.Rect((0,0),(1034, 778))
+        self.rect.center = (517, 389)
+        self.image_surf = pygame.image.load('assets/imgs/pop_up.jpg').convert()
+        self.image_surf = pygame. transform. scale(self.image_surf, (1034, 778))
 
     def pop_up(self, texts):
         row = len(texts)
@@ -1057,11 +1057,10 @@ class TextBox():
         for i in range(0, row):
             text = texts[i]
             text_surface = self.fontobj.render(text, True, (255, 255, 255))
-            text_center = (540, 120 + (360 / (row + 1)) * (i+1))
+            text_center = (517, 150 + (389 / (row + 1)) * (i+1))
             text_rect = text_surface.get_rect(center = text_center)
             self.surface.blit(text_surface, text_rect)
         self.status = 'pop_up'
-
 
     def update(self, control):
         if control['pop'] == True and self.status != 'pop_up':
@@ -1072,9 +1071,6 @@ class TextBox():
             return 'running'
 
 class Boss_icon(pygame.sprite.Sprite):
-
-
-
     def __init__(self, pos):
         pygame.sprite.Sprite.__init__(self)
         self.index = 0
@@ -1094,7 +1090,6 @@ class Boss_icon(pygame.sprite.Sprite):
         self.rect = self.image.get_rect(topleft=pos)
 
     def update(self):
-        print(self.rect)
         self.index = (self.index + 1) % (len(self.images[self.state]))
         self.image = self.images[self.state][self.index]
         self.mask = pygame.mask.from_surface(self.image)
@@ -1106,16 +1101,25 @@ class GameManager():
 
     def __init__(self):
         self.score = 0
-        self.difficulty = 0
+        self.difficulty = 1
         self.fontobj = setup_fonts(24)
         self.state = 'running'
         self.next = True
-        self.window_size_x = 1080
-        self.window_size_y = 720
+        self.window_size_x = 1034
+        self.window_size_y = 778
         self.magic = False
         self.revive_number = 0
         self.maze_time = 0
+        self.mix1 = pygame.mixer.Sound('assets/sounds/background.wav')
+        self.mix2 = pygame.mixer.Sound('assets/sounds/epic_battle_music_1-6275.wav')
+        self.mix3 = pygame.mixer.Sound('assets/sounds/epic_battle_music_1-6275.wav')
+        self.mix4 =  pygame.mixer.Sound('assets/sounds/epic_battle_music_1-6275.wav')
+        self.background_channel = pygame.mixer.Channel(0)
+        self.battle_channel = pygame.mixer.Channel(1)
+        self.background_channel.play(self.mix)
 
     def draw(self, surface):
          text = self.fontobj.render("Score: "+str(self.score), True, (255, 255, 255))
-         surface.blit(text,(16,80))
+         surface.blit(text,(880,50))
+         text = self.fontobj.render('Press P to Pause the Game!', True, (255, 255, 255))
+         surface.blit(text, (720, 20))

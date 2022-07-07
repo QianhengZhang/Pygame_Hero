@@ -1,19 +1,15 @@
 import pygame
-import start_menu
 from controller import check_events
-from model import Hero, Skeleton_blue, TextBox, Skeleton_red, GameManager, Warlock, Warlock_bullet, Fire, Portal, Meteor, Boss_icon
+from model import Hero, Skeleton_blue, TextBox, Skeleton_red, Warlock, Warlock_bullet, Fire, Portal, Meteor, Boss_icon
 import random
 import time
 
 def start_stage(game):
     pygame.init()
-    window_size_x = 1034
-    window_size_y = 778
-    surface = pygame.display.set_mode([window_size_x,window_size_y])
+    surface = pygame.display.set_mode([game.window_size_x, game.window_size_y])
     suggestions = ['Using WASD to move!', 'J is attack and K is block!', 'Be careful with the magic attack!']
-    pygame.display.set_caption('Game')
     background = pygame.image.load('assets/imgs/Battleground2.png').convert()
-    background = pygame. transform. scale(background, (window_size_x, window_size_y))
+    background = pygame. transform. scale(background, (game.window_size_x, game.window_size_y))
     avatar_group = pygame.sprite.GroupSingle()
     avatar = Hero((100, 500))
     avatar_group.add(avatar)
@@ -36,7 +32,7 @@ def start_stage(game):
     clock = pygame.time.Clock()
     state = 'running'
     demon_group = pygame.sprite.GroupSingle()
-    demon_group.add(Boss_icon((800, 20)))
+    demon_group.add(Boss_icon((800, 60)))
     portal_group = pygame.sprite.GroupSingle()
     portal_group.add(Portal((500, 500)))
 
@@ -72,7 +68,6 @@ def start_stage(game):
             index = random.randint(0, len(suggestions)-1)
         if controls['aimchange'] and meteor_ready:
             aimopen = not aimopen
-
         if game.score >= score_requirement and len(skeleton_group) == 0 and len(warlock_group) == 0:
             portal_group.update()
             if len(portal_group) > 0 and len(avatar_group) > 0:
@@ -102,14 +97,22 @@ def start_stage(game):
             demon_group.update()
             if len(avatar_group) > 0:
                 if len(skeleton_group) > 0:
-                    battle = pygame.sprite.spritecollide(avatar_group.sprite, skeleton_group, dokill=False, collided=pygame.sprite.collide_mask)
-                    avatar_group.sprite.update_collision(battle)
+                    if (avatar_group.sprite.status in ['attack', 'attack2', 'attack3']):
+                        monsters = skeleton_group.sprites()
+                        avatar_group.sprite.update_attack_collision(monsters)
+                    else:
+                        battle = pygame.sprite.spritecollide(avatar_group.sprite, skeleton_group, dokill=False, collided=pygame.sprite.collide_mask)
+                        avatar_group.sprite.update_hurt_collision(battle)
                 if len(warlock_group) > 0:
-                    battle = pygame.sprite.spritecollide(avatar_group.sprite, warlock_group, dokill=False, collided=pygame.sprite.collide_mask)
-                    avatar_group.sprite.update_collision(battle)
+                    if (avatar_group.sprite.status in ['attack', 'attack2', 'attack3']):
+                        monsters = warlock_group.sprites()
+                        avatar_group.sprite.update_attack_collision(monsters)
+                    else:
+                        battle = pygame.sprite.spritecollide(avatar_group.sprite, warlock_group, dokill=False, collided=pygame.sprite.collide_mask)
+                        avatar_group.sprite.update_hurt_collision(battle)
                     for warlock_sprite in warlock_group.sprites():
                         if warlock_sprite.fire == 1:
-                            bullet_group.add(Warlock_bullet((warlock_sprite.rect.center[0] + 15 * warlock_sprite.direction, warlock_sprite.rect.center[1] - 30),-(warlock_sprite.direction)))
+                            bullet_group.add(Warlock_bullet((warlock_sprite.rect.center[0] + 15 * warlock_sprite.direction, warlock_sprite.rect.center[1] - 20),-(warlock_sprite.direction)))
                         if warlock_sprite.cast == 1:
                             fire_effect.add(Fire(avatar_group.sprite.rect.move(15,0).topleft))
                 if len(bullet_group) > 0:
@@ -167,7 +170,7 @@ def draw_meteor_icon(count, surface):
     elif now - count >= 10:
         pygame.draw.circle(surface, (255,255,255), (50,50), 36)
     if now - count > 10:
-        image_surf = pygame.image.load('meteor.png').convert()
+        image_surf = pygame.image.load('assets/imgs/meteor.png').convert()
         image.blit(image_surf, (0,0))
         image.set_colorkey((0, 0, 0))
         rect = image_surf.get_rect(center=(50,50))
@@ -177,6 +180,7 @@ def draw_meteor_icon(count, surface):
 
 def draw_skill_icon(surface):
     pygame.draw.circle(surface, (0,0,0), (50,50), 40)
+    pygame.draw.circle(surface, (255,255,255), (50,50), 36)
 
 def group_update(avatar, groups, control):
     avatar.update(control)
@@ -193,17 +197,13 @@ def draw_health_bar(hero, surface):
     width = hero.hp/hero.maxHp * 240
     number = str(int(hero.hp)) + '/' + str(hero.maxHp)
     height = 30
-    text_pos = (750, 50)
-    text_rect = hero.image.get_rect(topleft=text_pos)
-    number_pos = (110 + max_width, 50)
+    number_pos = (90 + max_width, 50)
     number_rect = hero.image.get_rect(topleft=number_pos)
-    #text_surface = font.render('HP:', True, (255, 255, 255))
     number_surface = font.render(number, True, (255, 255, 255))
-    base_bar_rect = pygame.Rect(110, 53, max_width, height)
-    bar_rect = pygame.Rect(110, 53, width, height)
+    base_bar_rect = pygame.Rect(90, 53, max_width, height)
+    bar_rect = pygame.Rect(90, 53, width, height)
     base_color = (120, 120, 120)
     color = (255,0,0)
-    #surface.blit(text_surface, text_rect)
     pygame.draw.rect(surface, base_color, base_bar_rect)
     pygame.draw.rect(surface, color, bar_rect)
     pygame.draw.rect(surface, (0,0,0), base_bar_rect, 2)

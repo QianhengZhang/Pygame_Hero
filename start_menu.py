@@ -7,11 +7,11 @@ from pygame import mixer
 
 # Fix me after integration!
 global difficulty
-difficulty = 0
+difficulty = 1
 
 pygame.init()
 clock = pygame.time.Clock()
-screen_width = 1080
+screen_width = 1034
 screen_height = 778
 screen = pygame.display.set_mode((screen_width, screen_height))
 pygame.display.set_caption("The Medieval Knight Game!")
@@ -29,9 +29,6 @@ black = (0, 0, 0)
 background = pygame.image.load("menu_background.png")
 background = pygame.transform.scale(background, (1034, 778))
 
-# Background Sound
-mixer.music.load("background.wav")
-mixer.music.play(-1)
 
 # Function to create a button
 def create_button(x, y, width, height, hovercolor, defaultcolor):
@@ -51,18 +48,20 @@ def create_difficulty_button(x, y, width, height, hovercolor, defaultcolor):
     if x + width > mouse[0] > x and y + height > mouse[1] > y:
         pygame.draw.rect(screen, hovercolor, (x, y, width, height))
         if click[0] == 1:
-            if difficulty == 0:
-                difficulty = 1
-            elif difficulty == 1:
-                difficulty = 2
-            else:
-                difficulty = 0
-            return True
+            for event in pygame.event.get():
+                if event.type == pygame.MOUSEBUTTONUP:
+                    if difficulty == 0:
+                        difficulty = 1
+                    elif difficulty == 1:
+                        difficulty = 2
+                    else:
+                        difficulty = 0
+                    return True
     else:
         pygame.draw.rect(screen, defaultcolor, (x, y, width, height))
 
 # Start menu returns true until we click the Start button
-def start_menu():
+def start_menu(game):
     startText = font.render("Medieval Knight", True, slategrey)
     today = date.today()
     todayText = "Today is " + today.strftime("%A") + ", " + today.strftime("%B") + " " + today.strftime("%d") + \
