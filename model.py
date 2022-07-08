@@ -950,7 +950,7 @@ class Warlock(pygame.sprite.Sprite):
                     self.index = 0
                     self.last = time.time()
                 if self.state not in ['spellcast','attack']:
-                    if distance < 400 and distance > 150:
+                    if distance < 500 and distance > 150:
                         self.state = 'run'
                         if hero_center_pos[0] < x:
                             self.rect.move_ip(-1, 0)
@@ -960,20 +960,27 @@ class Warlock(pygame.sprite.Sprite):
                             self.rect.move_ip(0, -1)
                         if hero_center_pos[1] > y:
                             self.rect.move_ip(0, 1)
-                    if distance >= 400 or (150 >= distance and distance >= 120):
-                        self.state = 'idle'
-                    if distance < 120 and self.state != 'hurt':
+                    elif distance < 120:
                         self.state = 'run'
-                        if hero_center_pos[0] < x:
+                        stuck = 1
+                        if hero_center_pos[0] < x and x < 960:
                             self.direction = 1
                             self.rect.move_ip(1, 0)
-                        if hero_center_pos[0] > x:
+                            stuck = 0
+                        if hero_center_pos[0] > x and x > 40:
                             self.direction = -1
                             self.rect.move_ip(-1, 0)
-                        if hero_center_pos[1] < y:
+                            stuck = 0
+                        if hero_center_pos[1] < y and y < 700:
                             self.rect.move_ip(0, 1)
-                        if hero_center_pos[1] > y:
+                            stuck = 0
+                        if hero_center_pos[1] > y and y > 350:
                             self.rect.move_ip(0, -1)
+                            stuck = 0
+                        if stuck:
+                            self.state = 'idle'
+                    else:
+                        self.state = 'idle'
         self.index = (self.index + 1) % len(self.images[self.state])
         self.image = self.images[self.state][self.index]
         self.mask = pygame.mask.from_surface(self.image)
