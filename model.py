@@ -687,7 +687,7 @@ class Skeleton_blue(pygame.sprite.Sprite):
                     self.state = 'death_right'
                 self.lock = 1
                 self.index = 0
-            if self.state not in ['death_left','death_right','hurt_left','hurt_right']:
+            if self.state not in ['death_left','death_right','hurt_left','hurt_right','born']:
                 x = self.rect.centerx
                 y = self.rect.centery
                 distance = ((hero_center_pos[0] - x) ** 2 + (hero_center_pos[1] - y) ** 2) ** 0.5
@@ -734,7 +734,7 @@ class Skeleton_red(pygame.sprite.Sprite):
     def __init__(self, pos):
         pygame.sprite.Sprite.__init__(self)
         self.type = 'skeleton'
-        self.hp = 50
+        self.hp = 80
         self.attack = 15
         self.state = 'born'
         self.index = 0
@@ -821,7 +821,7 @@ class Skeleton_red(pygame.sprite.Sprite):
                     self.state = 'death_right'
                 self.lock = 1
                 self.index = 0
-            if self.state not in ['death_left', 'death_right', 'hurt_left', 'hurt_right']:
+            if self.state not in ['death_left', 'death_right', 'hurt_left', 'hurt_right','born']:
                 x = self.rect.centerx
                 y = self.rect.centery
                 distance = ((hero_center_pos[0] - x) ** 2 + (hero_center_pos[1] - y) ** 2) ** 0.5
