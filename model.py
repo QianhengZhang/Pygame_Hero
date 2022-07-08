@@ -221,16 +221,6 @@ class Boss(pygame.sprite.Sprite):
         self.mode = 0
         self.framecount = 0
         self.direction = -1
-        self.run_mode_step1 = 0
-        self.run_mode_step2 = 0
-        self.run_mode_step3 = 0
-        self.run_mode_step4 = 0
-        self.run_mode_step5 = 0
-        self.run_mode_step6 = 0
-        self.run_mode_step7 = 0
-        self.run_mode_step3_direction = 1
-        self.run_mode_step4_direction = 1
-        self.run_mode_step5_direction = 1
 
     def update(self,hero_pos):
         if self.hp <= 0:
@@ -243,16 +233,17 @@ class Boss(pygame.sprite.Sprite):
             if choice == 1:
                 self.mode = (self.mode-1)%3
             self.modelock = 1
-            print("mode ", end= '')
-            print(self.mode)
             if self.mode == 1:
-                self.run_mode_step1 = 0
-                self.run_mode_step2 = 0
-                self.run_mode_step3 = 0
-                self.run_mode_step4 = 0
-                self.run_mode_step5 = 0
-                self.run_mode_step6 = 0
-                self.run_mode_step7 = 0
+                run_mode_step1 = 0
+                run_mode_step2 = 0
+                run_mode_step3 = 0
+                run_mode_step4 = 0
+                run_mode_step5 = 0
+                run_mode_step6 = 0
+                run_mode_step7 = 0
+                run_mode_step3_direction = 1
+                run_mode_step4_direction = 1
+                run_mode_step5_direction = 1
         if self.modelock == 1:
             if self.mode == 0: #breath mode
                 if self.rect.y > 150:
@@ -291,79 +282,79 @@ class Boss(pygame.sprite.Sprite):
                         if self.framecount == 150:
                             self.lock = 0
             if self.mode == 1: #run mode
-                if self.run_mode_step1 == 0:
-                    if (self.rect.centery <= hero_pos[1]+10 and self.rect.centery >= hero_pos[1]-10) and (self.rect.centerx >= 650 or self.rect.centerx <= 150):
-                        self.run_mode_step1 = 1
+                if run_mode_step1 == 0:
+                    if (self.rect.centery <= hero_pos[1]+10 and self.rect.centery >= hero_pos[1]-10) and (self.rect.centerx >= 850 or self.rect.centerx <= 150):
+                        run_mode_step1 = 1
                         self.framecount = 0
                         self.index = 0
                     else:
                         self.state = 'fly_idle'
-                        if self.rect.centerx > 400:
+                        if self.rect.centerx > 500:
                             self.direction = -1
                         else:
                             self.direction = 1
-                        if self.rect.centerx > 400 and self.rect.centerx < 650:
+                        if self.rect.centerx > 500 and self.rect.centerx < 850:
                             self.rect.move_ip(5,0)
-                        if self.rect.centerx <= 400 and self.rect.centerx > 150:
+                        if self.rect.centerx <= 500 and self.rect.centerx > 150:
                             self.rect.move_ip(-5,0)
                         if self.rect.centery >= hero_pos[1]+10:
                             self.rect.move_ip(0,-3)
                         if self.rect.centery <= hero_pos[1]-10:
                             self.rect.move_ip(0,3)
-                if self.run_mode_step1 == 1 and self.run_mode_step2 == 0:
+                if run_mode_step1 == 1 and run_mode_step2 == 0:
                     self.state = 'transform'
                     if self.framecount == 6:
-                        self.run_mode_step2 = 1
+                        run_mode_step2 = 1
                         self.index = 0
-                        self.run_mode_step3_direction = self.direction *(-1)
-                if self.run_mode_step2 == 1 and self.run_mode_step3 == 0:
+                        run_mode_step3_direction = self.direction *(-1)
+                if run_mode_step2 == 1 and run_mode_step3 == 0:
                     self.state = 'run_attack'
-                    self.direction = self.run_mode_step3_direction
-                    if (self.direction == 1 and self.rect.centerx < 150) or (self.direction == -1 and self.rect.centerx >650):
-                        self.run_mode_step3 = 1
+                    self.direction = run_mode_step3_direction
+                    if (self.direction == 1 and self.rect.centerx < 150) or (self.direction == -1 and self.rect.centerx >850):
+                        run_mode_step3 = 1
                         self.index = 0
-                        self.run_mode_step4_direction = -self.direction
+                        run_mode_step4_direction = -self.direction
                     else:
                         if self.direction == 1:
-                            self.rect.move_ip(-10,0)
+                            self.rect.move_ip(-15,0)
                         else:
-                            self.rect.move_ip(10,0)
-                if self.run_mode_step3 == 1 and self.run_mode_step4 == 0:
-                    self.direction = self.run_mode_step4_direction
+                            self.rect.move_ip(15,0)
+                if run_mode_step3 == 1 and run_mode_step4 == 0:
+                    self.direction = run_mode_step4_direction
                     if (self.direction == 1 and self.rect.centerx < 150) or (
-                            self.direction == -1 and self.rect.centerx > 650):
+                            self.direction == -1 and self.rect.centerx > 850):
                         self.run_mode_step4 = 1
                         self.index = 0
                         self.run_mode_step5_direction = -self.direction
                     else:
                         if self.direction == 1:
-                            self.rect.move_ip(-10, 0)
+                            self.rect.move_ip(-15, 0)
                         else:
-                            self.rect.move_ip(10, 0)
-                if self.run_mode_step4 == 1 and self.run_mode_step5 == 0:
-                    self.direction = self.run_mode_step5_direction
+                            self.rect.move_ip(15, 0)
+                if run_mode_step4 == 1 and run_mode_step5 == 0:
+                    self.direction = run_mode_step5_direction
                     if (self.direction == 1 and self.rect.centerx < 150) or (
-                            self.direction == -1 and self.rect.centerx > 650) or (random.randint(0,15) == 0):
-                        self.run_mode_step5 = 1
+                            self.direction == -1 and self.rect.centerx > 850) or (random.randint(0,15) == 0):
+                        run_mode_step5 = 1
                         self.index = 0
                         self.framecount = 0
                     else:
                         if self.direction == 1:
-                            self.rect.move_ip(-10, 0)
+                            self.rect.move_ip(-15, 0)
                         else:
-                            self.rect.move_ip(10, 0)
-                if self.run_mode_step5 == 1 and self.run_mode_step6 == 0:
+                            self.rect.move_ip(15, 0)
+                if run_mode_step5 == 1 and run_mode_step6 == 0:
                     self.state = 'run_idle' #only in this step player can attack boss
                     if self.framecount == 100:
-                        self.run_mode_step6 = 1
+                        run_mode_step6 = 1
                         self.framecount = 0
                         self.index = 0
-                if self.run_mode_step6 == 1 and self.run_mode_step7 == 0:
+                if run_mode_step6 == 1 and run_mode_step7 == 0:
                     self.state = 'transform'
                     if self.framecount == 6:
-                        self.run_mode_step7 = 1
+                        run_mode_step7 = 1
                         self.index = 0
-                if self.run_mode_step7 == 1:
+                if run_mode_step7 == 1:
                     self.modelock = 0
             if self.mode == 2: #call minions mode
                 self.state = 'fly_idle'
