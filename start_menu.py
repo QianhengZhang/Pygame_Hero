@@ -26,7 +26,7 @@ blackish = (10, 10, 10)
 white = (255, 255, 255)
 black = (0, 0, 0)
 
-background = pygame.image.load("menu_background.png")
+background = pygame.image.load("start_page_background.png")
 background = pygame.transform.scale(background, (1034, 778))
 
 
