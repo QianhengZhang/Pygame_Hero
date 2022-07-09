@@ -13,8 +13,11 @@ This is a Medieval knight game made by team1. You will play as a hero knight cal
 2. Open the game.py and run it to start the game!
 
 You will have to choose a difficulty level at the begining:
+
 0 - A few numbers of monsters and easy maze
+
 1 - Normal numbers of monsters and an AI driven maze
+
 2 - A lot of monsters and a super AI enemy in the maze
 
 
