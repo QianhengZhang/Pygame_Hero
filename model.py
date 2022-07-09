@@ -1118,9 +1118,9 @@ class GameManager():
         self.maze_time = 0
         self.mix1 = pygame.mixer.Sound('assets/sounds/background.wav')
         self.mix2 = pygame.mixer.Sound('assets/sounds/epic_battle_music_1-6275.wav')
-        self.mix3 = pygame.mixer.Sound('assets/sounds/Maze.ogg')
-        self.mix4 =  pygame.mixer.Sound('assets/sounds/Boss.ogg')
-        self.mix5 =  pygame.mixer.Sound('assets/sounds/End.ogg')
+        self.mix3 = pygame.mixer.Sound('assets/sounds/Maze.wav')
+        self.mix4 =  pygame.mixer.Sound('assets/sounds/Boss.wav')
+        self.mix5 =  pygame.mixer.Sound('assets/sounds/End.wav')
         self.background_channel = pygame.mixer.Channel(0)
         self.battle_channel = pygame.mixer.Channel(1)
         self.background_channel.play(self.mix1, -1)
