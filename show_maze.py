@@ -6,10 +6,10 @@ from pygame.locals import *
 import mazes
 from model import Skeleton_blue
 
-portal1 = pygame.image.load("images.png")
-portal1 = pygame.transform.scale(portal1, (1034 / 32, 778 / 24))
-portal2 = pygame.image.load("portal.png")
-portal2 = pygame.transform.scale(portal2, (1034 / 32, 778 / 24))
+portal1 = pygame.image.load("assets/imgs/portal1.png")
+portal1 = pygame.transform.scale(portal1, (int(1034 / 32), int(778 / 24)))
+portal2 = pygame.image.load("assets/imgs/portal2.png")
+portal2 = pygame.transform.scale(portal2, (int(1034 / 32), int(778 / 24)))
 
 def show_maze():
     markup = None
@@ -18,10 +18,10 @@ def show_maze():
     return g, markup
 
 avatar = pygame.image.load('./assets/imgs/Sprites/HeroKnight/Idle/HeroKnight_Idle_0.png')
-avatar = pygame.transform.scale(avatar, (1034 / 32, 778 / 24))
+avatar = pygame.transform.scale(avatar, (int(1034 / 32), int(778 / 24)))
 
-enemy = pygame.image.load("enemy.png")
-enemy = pygame.transform.scale(enemy, (1034 / 32, 778 / 24))
+enemy = pygame.image.load("assets/imgs/enemy.png")
+enemy = pygame.transform.scale(enemy, (int(1034 / 32), int(778 / 24)))
 
 def display_grid(g, markup, screen, avatar_x, avatar_y, destination_x, destination_y, enemies, portals):
     for row in range(g.num_rows):

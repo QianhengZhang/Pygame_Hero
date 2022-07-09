@@ -1055,6 +1055,7 @@ class TextBox():
         self.fontobj = setup_fonts(36)
         self.rect = pygame.Rect((0,0),(1034, 778))
         self.rect.center = (517, 389)
+        self.img2 = pygame.image.load('assets/imgs/final_scene.jpg').convert()
         self.image_surf = pygame.image.load('assets/imgs/pop_up.jpg').convert()
         self.image_surf = pygame. transform. scale(self.image_surf, (1034, 778))
 
@@ -1119,11 +1120,12 @@ class GameManager():
         self.maze_time = 0
         self.mix1 = pygame.mixer.Sound('assets/sounds/background.wav')
         self.mix2 = pygame.mixer.Sound('assets/sounds/epic_battle_music_1-6275.wav')
-        self.mix3 = pygame.mixer.Sound('assets/sounds/epic_battle_music_1-6275.wav')
-        self.mix4 =  pygame.mixer.Sound('assets/sounds/epic_battle_music_1-6275.wav')
+        self.mix3 = pygame.mixer.Sound('assets/sounds/Maze.ogg')
+        self.mix4 =  pygame.mixer.Sound('assets/sounds/Boss.ogg')
+        self.mix5 =  pygame.mixer.Sound('assets/sounds/End.ogg')
         self.background_channel = pygame.mixer.Channel(0)
         self.battle_channel = pygame.mixer.Channel(1)
-        self.background_channel.play(self.mix1)
+        self.background_channel.play(self.mix1, -1)
 
     def draw(self, surface):
          text = self.fontobj.render("Score: "+str(self.score), True, (255, 255, 255))

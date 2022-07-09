@@ -30,7 +30,7 @@ def start_stage(game):
     monsters = [skeleton_group, warlock_group, boss_group]
     groups = [avatar_group, skeleton_group, warlock_group]
     pop_state = -1
-
+    game.background_channel.play(game.mix4, -1)
     while True:
         clock.tick(18)
         controls = check_events()

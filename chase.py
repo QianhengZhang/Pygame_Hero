@@ -12,7 +12,7 @@ screen_height = 778
 screen = pygame.display.set_mode((screen_width, screen_height))
 pygame.display.set_caption("The Medieval Knight Game!")
 
-background = pygame.image.load("Escape-room.jpg")
+background = pygame.image.load("assets/imgs/maze_background.png")
 background = pygame.transform.scale(background, (1034, 778))
 
 # Probably need fixing after integration !!!
@@ -85,6 +85,7 @@ def update_enemy_cheat(maze, enemies, avatar_x, avatar_y):
     return new_enemies
 
 def start_chase(game):
+    game.background_channel.play(game.mix3, -1)
     screen = pygame.display.set_mode([1034,778])
     maze, markup = show_maze.show_maze()
     running = True
@@ -167,11 +168,11 @@ def start_chase(game):
             running = False
             # Connect with the next page.
             # Implement me!!! Print "You win" for now
-            print("You win!")
+            print("You have gained the meteor Magic!")
 
         if ((avatar_x, avatar_y) in enemies):
             running = False
-            print("You ran into enemies!! Try again.")
+            print("You failed to find the magic power!")
 
         if ((avatar_x, avatar_y) in portals_pos[0]) and not just_teleported:
             if (avatar_x, avatar_y) == portals_pos[0][0]:

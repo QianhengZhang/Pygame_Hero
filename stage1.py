@@ -35,7 +35,7 @@ def start_stage(game):
     demon_group.add(Boss_icon((800, 60)))
     portal_group = pygame.sprite.GroupSingle()
     portal_group.add(Portal((500, 500)))
-
+    game.background_channel.play(game.mix2, -1)
     if game.difficulty == 0:
         max_skeleton = 3
         max_warlock = 1
