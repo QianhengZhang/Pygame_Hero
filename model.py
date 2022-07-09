@@ -128,7 +128,6 @@ class Hero(pygame.sprite.Sprite):
                             monster.lock = 1
                             monster.index = -1
 
-
     def update_hurt_collision(self, battle):
         status = ['attack', 'attack1', 'attack2']
         new = time.time()
@@ -185,9 +184,9 @@ class Hero(pygame.sprite.Sprite):
         if self.direction == -1:
             self.image = pygame.transform.flip(self.image, True, False)
 
-
     def draw(self, surface):
         surface.blit(self.image, self.rect)
+
 class Boss(pygame.sprite.Sprite):
     def __init__(self, pos):
         pygame.sprite.Sprite.__init__(self)
@@ -394,7 +393,6 @@ class Boss(pygame.sprite.Sprite):
 
         if self.direction == -1:
             self.image = pygame.transform.flip(self.image, True, False)
-
 
     def draw(self, surface):
         surface.blit(self.image, self.rect)
@@ -724,6 +722,7 @@ class Skeleton_blue(pygame.sprite.Sprite):
         self.index = (self.index + 1)%len(self.image_rects[self.state])
         self.mask = pygame.mask.from_surface(self.image)
         self.image.blit(self.image_surf,(0,0),self.image_rects[self.state][self.index])
+
     def draw(self, surface):
 
         surface.blit(self.image, self.rect)
@@ -860,7 +859,6 @@ class Skeleton_red(pygame.sprite.Sprite):
         self.image.blit(self.image_surf, (0, 0), self.image_rects[self.state][self.index])
 
     def draw(self, surface):
-
         surface.blit(self.image, self.rect)
 
 class Warlock(pygame.sprite.Sprite):
@@ -890,7 +888,6 @@ class Warlock(pygame.sprite.Sprite):
             'spellcast': [pygame.image.load(WARLOCK_ASSET + f'Spellcast/Warlock_Spellcast_{i}.png') for i in range(0, 14)],
             'hurt': [pygame.image.load(WARLOCK_ASSET + f'Hurt/Warlock_Hurt_{i}.png') for i in range(0, 4)],
         }
-
         image_surf = pygame.image.load(WARLOCK_ASSET + 'idle/Warlock_Idle_0.png').convert()
         image_surf = pygame.transform.scale(image_surf, (120, 96))
         self.image = pygame.Surface((100,80))
@@ -987,6 +984,7 @@ class Warlock(pygame.sprite.Sprite):
         self.image = pygame.transform.scale(self.image, (120, 96))
         if self.direction == -1:
             self.image = pygame.transform.flip(self.image, True, False)
+
     def draw(self, surface):
         surface.blit(self.image, self.rect)
 
@@ -1007,6 +1005,7 @@ class Warlock_bullet(pygame.sprite.Sprite):
             self.rect = self.image.get_rect(topleft=pos)
         if direction == -1:
             self.rect = self.image.get_rect(topleft=pos)
+
     def update(self):
         if self.direction == 1:
             if self.rect.x < -40:
@@ -1020,6 +1019,7 @@ class Warlock_bullet(pygame.sprite.Sprite):
         self.image = self.images[self.index]
         if self.direction == 1:
             self.image = pygame.transform.flip(self.image, True, False)
+
     def draw(self, surface):
         surface.blit(self.image, self.rect)
 
@@ -1048,7 +1048,6 @@ def setup_fonts(font_size, bold=False, italic=False):
     return pygame.font.SysFont(None, font_size, bold, italic)
 
 class TextBox():
-
     def __init__(self, surface):
         self.status = 'close'
         self.surface = surface
@@ -1106,7 +1105,6 @@ class Boss_icon(pygame.sprite.Sprite):
         surface.blit(self.image, self.rect)
 
 class GameManager():
-
     def __init__(self):
         self.score = 0
         self.difficulty = 1

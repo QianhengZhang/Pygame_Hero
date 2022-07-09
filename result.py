@@ -13,6 +13,7 @@ def show_result(game):
     pop.image_surf = pygame. transform. scale(pop.img2, (1034, 778))
     pop.pop_up(result)
     game.background_channel.play(game.mix5, -1)
+
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:

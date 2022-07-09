@@ -4,7 +4,6 @@ import pygame
 import pygame.gfxdraw
 from pygame.locals import *
 import mazes
-from model import Skeleton_blue
 
 portal1 = pygame.image.load("assets/imgs/portal1.png")
 portal1 = pygame.transform.scale(portal1, (int(1034 / 32), int(778 / 24)))
