@@ -324,9 +324,9 @@ class Boss(pygame.sprite.Sprite):
                         self.run_mode_step4_direction = -self.direction
                     else:
                         if self.direction == 1:
-                            self.rect.move_ip(-10,0)
+                            self.rect.move_ip(-15,0)
                         else:
-                            self.rect.move_ip(10,0)
+                            self.rect.move_ip(15,0)
                 if self.run_mode_step3 == 1 and self.run_mode_step4 == 0:
                     self.direction = self.run_mode_step4_direction
                     if (self.direction == 1 and self.rect.centerx < 150) or (
@@ -336,9 +336,9 @@ class Boss(pygame.sprite.Sprite):
                         self.run_mode_step5_direction = -self.direction
                     else:
                         if self.direction == 1:
-                            self.rect.move_ip(-10, 0)
+                            self.rect.move_ip(-15, 0)
                         else:
-                            self.rect.move_ip(10, 0)
+                            self.rect.move_ip(15, 0)
                 if self.run_mode_step4 == 1 and self.run_mode_step5 == 0:
                     self.direction = self.run_mode_step5_direction
                     if (self.direction == 1 and self.rect.centerx < 150) or (
@@ -348,9 +348,9 @@ class Boss(pygame.sprite.Sprite):
                         self.framecount = 0
                     else:
                         if self.direction == 1:
-                            self.rect.move_ip(-10, 0)
+                            self.rect.move_ip(-15, 0)
                         else:
-                            self.rect.move_ip(10, 0)
+                            self.rect.move_ip(15, 0)
                 if self.run_mode_step5 == 1 and self.run_mode_step6 == 0:
                     self.state = 'run_idle' #only in this step player can attack boss
                     if self.framecount == 100:
