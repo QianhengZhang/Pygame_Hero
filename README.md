@@ -5,7 +5,6 @@
 
 This is a Medieval knight game made by team1. You will play as a hero knight called Sir Gawaine and kill all the monsters in the dungeon.
 
-------------------
 
 ## Setup
 
@@ -18,25 +17,30 @@ You will have to choose a difficulty level at the begining:
 1 - Normal numbers of monsters and an AI driven maze
 2 - A lot of monsters and a super AI enemy in the maze
 
--------------------
 
 ## Control Guide:
 ### Battle:
 WASD - Moving in fightings and maze
+
 J - Melee attack
+
 K - Block in your direction
+
 WASD + J - Running attack
+
 K+J - Block attack
+
 E: Cast a meteor rain on the selected field. It will start as
 a red circle until you click a spot
 
 ### Game Play:
 
 P - Pause the game during the fight(not in maze)
+
 R - Revive if you are dead, but it will decrease your score
+
 Q - Quit the game whenever you want, but the game will not save your progress
 
----------------------
 
 ## File List:
 ### View Layer
@@ -60,7 +64,7 @@ chances to beat him!
 and magic sprite.
 9. mazes.py - The support file for chase stage.
 10. show_maze.py - The support file for chase stage.
---------------------------------------------------------------
+
 ## Acknowledgement
 
 Thanks for all the help from Professor William Nace and TA Shuo Wang.
