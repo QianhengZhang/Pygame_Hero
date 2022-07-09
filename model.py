@@ -409,23 +409,23 @@ class Breath(pygame.sprite.Sprite):
         self.attack = 30
         self.images = [pygame.image.load('assets/imgs/Sprites/Boss/breath/' +f'breath_{i}.png') for i in range(0, 5)]
         image_surf = pygame.image.load('assets/imgs/Sprites/Boss/breath/' +f'breath_0.png').convert()
-        self.image = pygame.Surface((500, 350))
+        self.image = pygame.Surface((600, 500))
         self.image.blit(image_surf, (0, 0))
         self.image.set_colorkey((0, 0, 0))
         self.mask = pygame.mask.from_surface(self.image)
         if direction == 1:
             self.direction = 1
-            self.rect = self.image.get_rect(topleft = (pos[0]-350, pos[1]-85))
+            self.rect = self.image.get_rect(topleft = (pos[0]-450, pos[1]-100))
         if direction == -1:
             self.direction = -1
-            self.rect = self.image.get_rect(topleft = (pos[0]+40, pos[1]-85))
+            self.rect = self.image.get_rect(topleft = (pos[0]+40, pos[1]-100))
         self.framecount = 0
     def update(self):
         if self.framecount == 50:
             self.kill()
         self.framecount += 1
         self.image = self.images[self.index]
-        self.image = pygame.transform.scale(self.image,(500,350))
+        self.image = pygame.transform.scale(self.image,(600,500))
         self.index = (self.index+1) % 5
         if self.direction == -1:
             self.image = pygame.transform.flip(self.image, True, False)
