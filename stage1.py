@@ -182,14 +182,6 @@ def draw_skill_icon(surface):
     pygame.draw.circle(surface, (0,0,0), (50,50), 40)
     pygame.draw.circle(surface, (255,255,255), (50,50), 36)
 
-def group_update(avatar, groups, control):
-    avatar.update(control)
-    for group in groups:
-        group.update()
-
-def group_draw(groups, surface):
-    for group in groups:
-        group.draw(surface)
 
 def draw_health_bar(hero, surface):
     font = setup_fonts(24)

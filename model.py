@@ -16,7 +16,7 @@ class Hero(pygame.sprite.Sprite):
         self.maxHp = 200
         self.hp = 200
         self.type = 'hero'
-        self.attack = 200
+        self.attack = 20
         self.coolDown = 0.7
         self.damageCoolDown = 2.5
         self.status = 'idle'
@@ -195,8 +195,8 @@ class Boss(pygame.sprite.Sprite):
     def __init__(self, pos):
         pygame.sprite.Sprite.__init__(self)
         BOSS_ASSET = 'assets/imgs/Sprites/Boss/'
-        self.hp = 1200
-        self.maxHp = 1200
+        self.hp = 800
+        self.maxHp = 800
         self.type = 'boss'
         self.attack = 40
         self.index = 0

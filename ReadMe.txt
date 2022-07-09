@@ -70,6 +70,9 @@ All asstes all from internet:
 1. https://itch.io/game-assets/free/tag-pixel-art
 2. https://opengameart.org/
 3. https://itch.io/game-assets/free
+4. https://soundimage.org/puzzle-music/
+5. https://mixkit.co/free-sound-effects/game/
+6. https://www.zapsplat.com/sound-effect-category/game-sounds/
 
 Our team members are Frank(Yijie) Shi, Jimmy(Yuehuan) Qiu,
 and Joshua(Qianheng) Zhang. Thank you for playing our game!
