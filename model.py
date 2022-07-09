@@ -177,6 +177,10 @@ class Hero(pygame.sprite.Sprite):
         self.status = 'hurt'
         if monster.type != 'breath':
             self.rect.x -= monster.direction * 15
+            if self.rect.x < -50:
+                self.rect.x = -45
+            elif self.rect.x > 950:
+                self.rect.x = 945
         self.image = self.images[self.status][self.index]
         self.index = (self.index + 1) % len(self.images[self.status])
         if self.index == len(self.images[self.status]) - 1:
@@ -1119,8 +1123,8 @@ class GameManager():
         self.mix1 = pygame.mixer.Sound('assets/sounds/background.wav')
         self.mix2 = pygame.mixer.Sound('assets/sounds/epic_battle_music_1-6275.wav')
         self.mix3 = pygame.mixer.Sound('assets/sounds/Maze.wav')
-        self.mix4 =  pygame.mixer.Sound('assets/sounds/Boss.wav')
-        self.mix5 =  pygame.mixer.Sound('assets/sounds/End.wav')
+        self.mix4 = pygame.mixer.Sound('assets/sounds/Boss.wav')
+        self.mix5 = pygame.mixer.Sound('assets/sounds/End.wav')
         self.background_channel = pygame.mixer.Channel(0)
         self.battle_channel = pygame.mixer.Channel(1)
         self.background_channel.play(self.mix1, -1)
